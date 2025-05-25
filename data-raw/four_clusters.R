@@ -16,3 +16,5 @@ four_clusters <- gen_multicluster(n = c(300, 250, 650, 800), p = 4, k = 4,
                        is_bkg = FALSE)
 ## To save data
 usethis::use_data(four_clusters, overwrite = TRUE)
+
+
