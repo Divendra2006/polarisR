@@ -2,7 +2,7 @@ Package: nldrDiagnostics
 Title: NLDR Diagnostic Tool
 Version: 0.1.0
 Authors@R: person("Your", "Name", email = "your@email.com", role = c("cre", "aut"))
-Description: Interactive visualization for dimensionality reduction diagnostics.
+Description: Interactive visualization for Non-Linear dimensional reduction.
 License: GPL-3
 Depends:
     R (>= 4.1.0)
