@@ -30,11 +30,8 @@ load_custom_datasets <- function() {
   # Try to load trees.R
   tryCatch({
     source(system.file("data-raw", "trees.R", package = "nldrViz"), local = TRUE)
-    if(exists("trees")) {
-      datasets[["trees"]] <- trees
-    } else {
-      # If trees dataset is not explicitly created in the R file, try using the built-in trees dataset
-      datasets[["trees"]] <- datasets::trees
+    if(exists("fake_trees")) {
+      datasets[["trees"]] <- fake_trees
     }
   }, error = function(e) {
     warning("Could not load trees.R: ", e$message)
