@@ -1,27 +1,44 @@
-# download PDFsense data
+# download PDFsense data - run this once to create the data file
+# NOTE: This script should be run once to generate the pdfsense.rda file
+# and then commented out or removed from the package
+
 library(readr)
 options(timeout = 300)
 
-url <- "http://www.physics.smu.edu/botingw/PDFsense_web_histlogy/tsv.zip"
-dir <- tempdir()
-zip <- file.path(dir, "pdfsense.zip")
+# Only run this data downloading code if the data doesn't already exist
+if (!exists("pdfsense") && !file.exists("data/pdfsense.rda")) {
+  message("Downloading PDFsense data...")
 
-tsv_path <- file.path(dir, "tsv", "CT14_signed")
-download.file(url, destfile = zip)
+  url <- "http://www.physics.smu.edu/botingw/PDFsense_web_histlogy/tsv.zip"
+  dir <- tempdir()
+  zip <- file.path(dir, "pdfsense.zip")
 
-unzip(zip, exdir = dir)
+  tsv_path <- file.path(dir, "tsv", "CT14_signed")
+  download.file(url, destfile = zip)
 
-mat <- read_tsv(
-  file.path(tsv_path, "residual_all_norm_-1_RawData.tsv"),
-  col_names = FALSE
-)
+  unzip(zip, exdir = dir)
 
-meta <- read_tsv(
-  file.path(tsv_path, "metadata_RawData.tsv")
-)
+  mat <- read_tsv(
+    file.path(tsv_path, "residual_all_norm_-1_RawData.tsv"),
+    col_names = FALSE
+  )
 
-pdfsense <- as.data.frame(cbind(meta, mat))
+  meta <- read_tsv(
+    file.path(tsv_path, "metadata_RawData.tsv")
+  )
 
-unlink(dir, recursive = TRUE)
+  pdfsense <- as.data.frame(cbind(meta, mat))
 
-usethis::use_data(pdfsense, overwrite = TRUE)
+  unlink(dir, recursive = TRUE)
+
+  # Save the data to the package's data directory
+  if (!dir.exists("data")) {
+    dir.create("data")
+  }
+
+  # Add documentation for the dataset
+  usethis::use_data(pdfsense, overwrite = TRUE)
+  message("PDFsense data saved to data/pdfsense.rda")
+} else {
+  message("PDFsense data already exists, skipping download")
+}
