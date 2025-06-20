@@ -355,6 +355,7 @@ nldr_viz_server <- function(input, output, session) {
         x = paste(result$method, "Dimension 1"),
         y = paste(result$method, "Dimension 2"),
         color = result$color_col) +
+      ggplot2::coord_fixed(ratio = 1) +
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "right")
 
