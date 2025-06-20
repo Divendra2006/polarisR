@@ -5,7 +5,6 @@
 library(readr)
 options(timeout = 300)
 
-# Only run this data downloading code if the data doesn't already exist
 if (!exists("pdfsense") && !file.exists("data/pdfsense.rda")) {
   message("Downloading PDFsense data...")
 
@@ -31,12 +30,10 @@ if (!exists("pdfsense") && !file.exists("data/pdfsense.rda")) {
 
   unlink(dir, recursive = TRUE)
 
-  # Save the data to the package's data directory
   if (!dir.exists("data")) {
     dir.create("data")
   }
 
-  # Add documentation for the dataset
   usethis::use_data(pdfsense, overwrite = TRUE)
   message("PDFsense data saved to data/pdfsense.rda")
 } else {
