@@ -18,8 +18,12 @@ nldr_viz_server <- function(input, output, session) {
   # Track if Apply Changes was clicked
   apply_changes_clicked <- shiny::reactiveVal(FALSE)
 
-  # Initialize custom datasets with those from data-raw folder
-  custom_datasets <- shiny::reactiveVal(load_custom_datasets())
+  # Initialize custom datasets with example datasets
+  custom_datasets <- shiny::reactiveVal(list(
+    four_clusters = iris,
+    pdfsense = mtcars,
+    trees = trees
+  ))
 
   # Reactive value to store available dataset choices
   available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense", "trees"))
@@ -69,43 +73,6 @@ nldr_viz_server <- function(input, output, session) {
     }
   )
 
-  # Add uploaded dataset to examples
-  shiny::observeEvent(input$add_to_examples, {
-    shiny::req(dataset(), input$file)
-
-    # Get dataset name (use file name if dataset_name is empty)
-    dataset_name <- if (input$dataset_name != "") {
-      input$dataset_name
-    } else {
-      tools::file_path_sans_ext(input$file$name)
-    }
-
-    # Check if the name already exists
-    current_choices <- available_datasets()
-    if (dataset_name %in% current_choices) {
-      # Append a number to make the name unique
-      i <- 1
-      while(paste0(dataset_name, "_", i) %in% current_choices) {
-        i <- i + 1
-      }
-      dataset_name <- paste0(dataset_name, "_", i)
-    }
-
-    # Add the dataset to custom_datasets
-    current_custom <- custom_datasets()
-    current_custom[[dataset_name]] <- dataset()
-    custom_datasets(current_custom)
-
-    # Update available datasets
-    available_datasets(c(current_choices, dataset_name))
-
-    # Show confirmation message
-    shiny::showNotification(paste("Dataset", dataset_name, "added to example datasets"), type = "message")
-
-    # Select the newly added dataset
-    shiny::updateSelectInput(session, "example_data", selected = dataset_name)
-  })
-
   # Load example datasets or user uploaded file
   shiny::observeEvent(input$example_data, {
     shiny::req(input$example_data != "None")
@@ -118,6 +85,7 @@ nldr_viz_server <- function(input, output, session) {
     apply_changes_clicked(FALSE)
   })
 
+  # Automatically add uploaded dataset to examples
   shiny::observeEvent(input$file, {
     file <- input$file
     shiny::req(file)
@@ -132,6 +100,34 @@ nldr_viz_server <- function(input, output, session) {
     data <- read.csv(file$datapath, stringsAsFactors = TRUE)
     dataset(data)
     apply_changes_clicked(FALSE)
+
+    # Automatically add to example datasets
+    # Get dataset name from file name
+    dataset_name <- tools::file_path_sans_ext(file$name)
+
+    # Check if the name already exists and make it unique
+    current_choices <- available_datasets()
+    if (dataset_name %in% current_choices) {
+      i <- 1
+      while(paste0(dataset_name, "_", i) %in% current_choices) {
+        i <- i + 1
+      }
+      dataset_name <- paste0(dataset_name, "_", i)
+    }
+
+    # Add the dataset to custom_datasets
+    current_custom <- custom_datasets()
+    current_custom[[dataset_name]] <- data
+    custom_datasets(current_custom)
+
+    # Update available datasets
+    available_datasets(c(current_choices, dataset_name))
+
+    # Show confirmation message
+    shiny::showNotification(paste("Dataset", dataset_name, "added to example datasets"), type = "message")
+
+    # Select the newly added dataset
+    shiny::updateSelectInput(session, "example_data", selected = dataset_name)
   })
 
   # Generate UI for column selection

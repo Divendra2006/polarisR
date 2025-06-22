@@ -20,8 +20,6 @@ nldr_viz_ui <- function() {
           gap = "3rem",
           bslib::card(title = "Data Options",
                       shiny::fileInput("file", "Upload Dataset", accept = c(".csv")),
-                      shiny::textInput("dataset_name", "Name for uploaded dataset (optional)"),
-                      shiny::actionButton("add_to_examples", "Add to Example Datasets", class = "btn-primary"),
                       shiny::selectInput("example_data", "Example Datasets",
                                          choices = c("None", "four_clusters", "pdfsense", "trees"))),
           bslib::card(
