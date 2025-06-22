@@ -63,9 +63,21 @@ nldr_viz_server <- function(input, output, session) {
         settings$min_dist <- input$min_dist
       }
 
-      # Add color column if not auto
-      if (!input$auto_color && !is.null(input$color_column)) {
-        settings$color_column <- input$color_column
+      if (input$auto_color) {
+        # If auto color is enabled, determine which column would be selected
+        shiny::req(dataset())
+        data <- dataset()
+        categorical_cols <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
+        if (length(categorical_cols) > 0) {
+          settings$color_column <- categorical_cols[1]
+        } else {
+          settings$color_column <- names(data)[1]
+        }
+      } else {
+        # If manual color selection, use the selected column
+        if (!is.null(input$color_column)) {
+          settings$color_column <- input$color_column
+        }
       }
 
       # Write settings to JSON file
