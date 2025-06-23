@@ -24,6 +24,28 @@ nldr_viz_server <- function(input, output, session) {
   # Reactive value to store available dataset choices
   available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense", "trees"))
 
+  # Function to check for empty cells in dataset
+  check_empty_cells <- function(data) {
+    if (is.null(data) || nrow(data) == 0) return(list(has_empty = FALSE))
+
+    # Check for any empty cells in the entire dataset
+    has_empty <- any(sapply(data, function(x) any(is.na(x) | x == "" | is.null(x))))
+
+    if (has_empty) {
+      # Count empty cells per column for detailed info
+      empty_counts <- sapply(data, function(x) sum(is.na(x) | x == "" | is.null(x)))
+      empty_cols <- names(empty_counts)[empty_counts > 0]
+
+      return(list(
+        has_empty = TRUE,
+        empty_cols = empty_cols,
+        total_empty = sum(empty_counts)
+      ))
+    }
+
+    return(list(has_empty = FALSE))
+  }
+
   # Update example dataset choices when a new dataset is added
   shiny::observe({
     choices <- available_datasets()
@@ -93,7 +115,6 @@ nldr_viz_server <- function(input, output, session) {
     apply_changes_clicked(FALSE)
   })
 
-  # Automatically add uploaded dataset to examples
   shiny::observeEvent(input$file, {
     file <- input$file
     shiny::req(file)
@@ -104,38 +125,66 @@ nldr_viz_server <- function(input, output, session) {
       return()
     }
 
-    # Read CSV file
-    data <- read.csv(file$datapath, stringsAsFactors = TRUE)
-    dataset(data)
-    apply_changes_clicked(FALSE)
+    tryCatch({
+      # Read CSV file
+      data <- read.csv(file$datapath, stringsAsFactors = TRUE)
 
-    # Automatically add to example datasets
-    # Get dataset name from file name
-    dataset_name <- tools::file_path_sans_ext(file$name)
+      # Check for empty cells
+      empty_check <- check_empty_cells(data)
 
-    # Check if the name already exists and make it unique
-    current_choices <- available_datasets()
-    if (dataset_name %in% current_choices) {
-      i <- 1
-      while(paste0(dataset_name, "_", i) %in% current_choices) {
-        i <- i + 1
+      if (empty_check$has_empty) {
+        shiny::showModal(shiny::modalDialog(
+          title = "Empty Cells Detected",
+          shiny::div(
+            shiny::p(paste("The dataset contains", empty_check$total_empty, "empty cells.")),
+            shiny::p("Affected columns:", paste(empty_check$empty_cols, collapse = ", ")),
+            shiny::p("Please clean your data and upload again. Visualization cannot proceed with empty cells.")
+          ),
+          easyClose = TRUE,
+          footer = shiny::modalButton("OK")
+        ))
+        return() # Stop processing
       }
-      dataset_name <- paste0(dataset_name, "_", i)
-    }
 
-    # Add the dataset to custom_datasets
-    current_custom <- custom_datasets()
-    current_custom[[dataset_name]] <- data
-    custom_datasets(current_custom)
+      dataset(data)
+      apply_changes_clicked(FALSE)
 
-    # Update available datasets
-    available_datasets(c(current_choices, dataset_name))
+      # Automatically add to example datasets
+      # Get dataset name from file name
+      dataset_name <- tools::file_path_sans_ext(file$name)
 
-    # Show confirmation message
-    shiny::showNotification(paste("Dataset", dataset_name, "added to example datasets"), type = "message")
+      # Check if the name already exists and make it unique
+      current_choices <- available_datasets()
+      if (dataset_name %in% current_choices) {
+        i <- 1
+        while(paste0(dataset_name, "_", i) %in% current_choices) {
+          i <- i + 1
+        }
+        dataset_name <- paste0(dataset_name, "_", i)
+      }
 
-    # Select the newly added dataset
-    shiny::updateSelectInput(session, "example_data", selected = dataset_name)
+      # Add the dataset to custom_datasets
+      current_custom <- custom_datasets()
+      current_custom[[dataset_name]] <- data
+      custom_datasets(current_custom)
+
+      # Update available datasets
+      available_datasets(c(current_choices, dataset_name))
+
+      # Show confirmation message
+      shiny::showNotification(paste("Dataset", dataset_name, "added to example datasets"), type = "message")
+
+      # Select the newly added dataset
+      shiny::updateSelectInput(session, "example_data", selected = dataset_name)
+
+    }, error = function(e) {
+      shiny::showModal(shiny::modalDialog(
+        title = "Error Reading File",
+        paste("An error occurred while reading the file:", e$message),
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+    })
   })
 
   # Generate UI for column selection
@@ -254,90 +303,117 @@ nldr_viz_server <- function(input, output, session) {
     shiny::req(dataset())
     data <- dataset()
 
-    # Select numeric columns for NLDR
-    numeric_cols <- sapply(data, is.numeric)
-    if (sum(numeric_cols) < 2) {
-      shiny::showNotification("Need at least 2 numeric columns for dimensionality reduction", type = "error")
-      return()
-    }
+    tryCatch({
+      # Check for empty cells before visualization
+      empty_check <- check_empty_cells(data)
 
-    numeric_data <- data[, numeric_cols, drop = FALSE]
-
-    # Ensure data is scaled
-    scaled_data <- scale(numeric_data)
-
-    # Handle missing values
-    scaled_data[is.na(scaled_data)] <- 0
-
-    # Get color column
-    color_col <- if (input$auto_color) {
-      # Prefer categorical columns
-      categorical_cols <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
-      if (length(categorical_cols) > 0) {
-        categorical_cols[1]
-      } else {
-        names(data)[1]
+      if (empty_check$has_empty) {
+        shiny::showModal(shiny::modalDialog(
+          title = "Cannot Run Visualization",
+          shiny::div(
+            shiny::p("The dataset contains empty cells."),
+            shiny::p("Please clean your data before running visualization."),
+            shiny::p("Affected columns:", paste(empty_check$empty_cols, collapse = ", "))
+          ),
+          easyClose = TRUE,
+          footer = shiny::modalButton("OK")
+        ))
+        return() # Stop visualization
       }
-    } else {
-      input$color_column
-    }
 
-    # Calculate optimal perplexity if auto-adjust is enabled
-    perplexity_value <- input$perplexity
-    if (input$auto_perplexity && input$nldr_method == "t-SNE") {
-      perplexity_value <- min(30, floor(nrow(data) / 3) - 1)
-      perplexity_value <- max(5, perplexity_value)
-    }
+      # Select numeric columns for NLDR
+      numeric_cols <- sapply(data, is.numeric)
+      if (sum(numeric_cols) < 2) {
+        shiny::showNotification("Need at least 2 numeric columns for dimensionality reduction", type = "error")
+        return()
+      }
 
-    # Set seed for reproducibility
-    set.seed(input$seed)
+      numeric_data <- data[, numeric_cols, drop = FALSE]
 
-    # Run the selected NLDR method
-    result <- list(
-      method = input$nldr_method,
-      color_col = color_col,
-      color_values = data[[color_col]],
-      seed = input$seed
-    )
+      # Ensure data is scaled
+      scaled_data <- scale(numeric_data)
 
-    # Run t-SNE or UMAP based on selection
-    if (input$nldr_method == "t-SNE") {
-      shiny::withProgress(message = 'Running t-SNE...', {
-        # Check if perplexity is too large and cap it if needed (without changing the slider)
-        max_allowed_perplexity <- nrow(data) - 1
-        if (perplexity_value >= max_allowed_perplexity) {
-          perplexity_value <- max_allowed_perplexity / 3
-          shiny::showNotification(
-            paste("Perplexity was too large for this dataset. Using", perplexity_value, "instead."),
-            type = "warning"
-          )
+      # Handle missing values
+      scaled_data[is.na(scaled_data)] <- 0
+
+      # Get color column
+      color_col <- if (input$auto_color) {
+        # Prefer categorical columns
+        categorical_cols <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
+        if (length(categorical_cols) > 0) {
+          categorical_cols[1]
+        } else {
+          names(data)[1]
         }
+      } else {
+        input$color_column
+      }
 
-        tsne_result <- Rtsne::Rtsne(scaled_data, dims = 2, perplexity = perplexity_value,
-                                    max_iter = input$max_iter_tsne, check_duplicates = FALSE,
-                                    pca = TRUE, pca_center = TRUE, pca_scale = FALSE,
-                                    theta = 0.5, verbose = FALSE)
+      # Calculate optimal perplexity if auto-adjust is enabled
+      perplexity_value <- input$perplexity
+      if (input$auto_perplexity && input$nldr_method == "t-SNE") {
+        perplexity_value <- min(30, floor(nrow(data) / 3) - 1)
+        perplexity_value <- max(5, perplexity_value)
+      }
 
-        result$coords <- tsne_result$Y
-        result$perplexity <- perplexity_value
-        result$max_iter <- input$max_iter_tsne
-      })
-    } else if (input$nldr_method == "UMAP") {
-      shiny::withProgress(message = 'Running UMAP...', {
-        umap_config <- umap::umap.defaults
-        umap_config$n_neighbors <- input$n_neighbors
-        umap_config$min_dist <- input$min_dist
+      # Set seed for reproducibility
+      set.seed(input$seed)
 
-        umap_result <- umap::umap(scaled_data, config = umap_config)
+      # Run the selected NLDR method
+      result <- list(
+        method = input$nldr_method,
+        color_col = color_col,
+        color_values = data[[color_col]],
+        seed = input$seed
+      )
 
-        result$coords <- umap_result$layout
-        result$n_neighbors <- input$n_neighbors
-        result$min_dist <- input$min_dist
-      })
-    }
+      # Run t-SNE or UMAP based on selection
+      if (input$nldr_method == "t-SNE") {
+        shiny::withProgress(message = 'Running t-SNE...', {
+          # Check if perplexity is too large and cap it if needed (without changing the slider)
+          max_allowed_perplexity <- nrow(data) - 1
+          if (perplexity_value >= max_allowed_perplexity) {
+            perplexity_value <- max_allowed_perplexity / 3
+            shiny::showNotification(
+              paste("Perplexity was too large for this dataset. Using", perplexity_value, "instead."),
+              type = "warning"
+            )
+          }
 
-    # Store results for plotting
-    vis_results(result)
+          tsne_result <- Rtsne::Rtsne(scaled_data, dims = 2, perplexity = perplexity_value,
+                                      max_iter = input$max_iter_tsne, check_duplicates = FALSE,
+                                      pca = TRUE, pca_center = TRUE, pca_scale = FALSE,
+                                      theta = 0.5, verbose = FALSE)
+
+          result$coords <- tsne_result$Y
+          result$perplexity <- perplexity_value
+          result$max_iter <- input$max_iter_tsne
+        })
+      } else if (input$nldr_method == "UMAP") {
+        shiny::withProgress(message = 'Running UMAP...', {
+          umap_config <- umap::umap.defaults
+          umap_config$n_neighbors <- input$n_neighbors
+          umap_config$min_dist <- input$min_dist
+
+          umap_result <- umap::umap(scaled_data, config = umap_config)
+
+          result$coords <- umap_result$layout
+          result$n_neighbors <- input$n_neighbors
+          result$min_dist <- input$min_dist
+        })
+      }
+
+      # Store results for plotting
+      vis_results(result)
+
+    }, error = function(e) {
+      shiny::showModal(shiny::modalDialog(
+        title = "Visualization Error",
+        paste("An error occurred during visualization:", e$message),
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+    })
   })
 
   # Generate the visualization plot
