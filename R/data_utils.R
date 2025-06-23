@@ -35,8 +35,6 @@ load_custom_datasets <- function() {
     }
   }, error = function(e) {
     warning("Could not load trees.R: ", e$message)
-    # Try using the built-in trees dataset as fallback
-    datasets[["trees"]] <- datasets::trees
   })
 
   return(datasets)

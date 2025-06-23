@@ -19,11 +19,7 @@ nldr_viz_server <- function(input, output, session) {
   apply_changes_clicked <- shiny::reactiveVal(FALSE)
 
   # Initialize custom datasets with example datasets
-  custom_datasets <- shiny::reactiveVal(list(
-    four_clusters = iris,
-    pdfsense = mtcars,
-    trees = trees
-  ))
+  custom_datasets <- shiny::reactiveVal(load_custom_datasets())
 
   # Reactive value to store available dataset choices
   available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense", "trees"))
