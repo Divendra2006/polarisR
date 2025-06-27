@@ -10,6 +10,6 @@ load_custom_datasets()
 A list of datasets
 }
 \description{
-Loads datasets from the data-raw folder or uses built-in datasets
+Loads datasets from the package data or uses built-in datasets
 }
 \keyword{internal}
