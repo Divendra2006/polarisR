@@ -98,7 +98,7 @@ nldr_viz_ui <- function() {
 
         bslib::card(
           bslib::card_header("Visualization"),
-          plotly::plotlyOutput("nldr_plot", height = "600px")
+          plotly::plotlyOutput("nldr_plot", height = "600px", width = "600px")
         ),
 
         bslib::card(
