@@ -32,7 +32,12 @@ nldr_viz_ui <- function() {
             ),
             shiny::hr(),
             shiny::actionButton("apply_changes", "Apply Changes", class = "btn-primary")
-          )),
+          ),
+          bslib::card(
+            bslib::card_header("NLDR Datasets"),
+            shiny::uiOutput("stored_nldr_ui")
+          )
+        ),
 
         bslib::card(
           bslib::card_header("Dataset Preview"),
@@ -59,7 +64,6 @@ nldr_viz_ui <- function() {
                                 choices = c("t-SNE", "UMAP"),
                                 selected = "t-SNE"),
 
-            # t-SNE parameters
             shiny::conditionalPanel(
               condition = "input.nldr_method == 't-SNE'",
               shiny::sliderInput("perplexity", "Perplexity:",
@@ -69,7 +73,6 @@ nldr_viz_ui <- function() {
               shiny::checkboxInput("auto_perplexity", "Auto-adjust perplexity", value = FALSE)
             ),
 
-            # UMAP parameters
             shiny::conditionalPanel(
               condition = "input.nldr_method == 'UMAP'",
               shiny::sliderInput("n_neighbors", "Number of Neighbors:",
@@ -88,12 +91,11 @@ nldr_viz_ui <- function() {
 
           bslib::card(
             bslib::card_header("Reproducibility Options"),
-            shiny::numericInput("seed", "Random Seed:", value = 123, min = 1, max = 99999),
-            shiny::actionButton("reset_seed", "Generate New Seed", class = "btn-info btn-sm"),
-            shiny::downloadButton("download_settings", "Export Settings", class = "btn-primary btn-sm mt-2")
+            shiny::numericInput("seed", "Random Seed:", value = 123, min = 1, max = 99999)
           ),
 
-          shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success")
+          shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success"),
+
         ),
 
         bslib::card(
