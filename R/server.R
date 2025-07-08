@@ -342,7 +342,18 @@ nldr_viz_server <- function(input, output, session) {
   })
 
   output$nldr_plot <- plotly::renderPlotly({
-    nldr_plotly_object()
+    my_plot <- nldr_plotly_object()
+    my_plot %>%
+      plotly::layout(
+        margin = list(
+          l = 50,
+          r = 50,
+          b = 100,
+          t = 50
+        ),
+        xaxis = list(automargin = TRUE, title = list(standoff = 20)),
+        yaxis = list(automargin = TRUE, title = list(standoff = 20))
+      )
   })
 
   output$nldr_plot_tour_tab <- plotly::renderPlotly({

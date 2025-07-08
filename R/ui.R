@@ -97,17 +97,18 @@ nldr_viz_ui <- function() {
           shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success"),
 
         ),
-
+        bslib::layout_columns(
+        col_widths = c(8, 4),
         bslib::card(
           bslib::card_header("Visualization"),
-          plotly::plotlyOutput("nldr_plot", height = "600px", width = "600px")
+          plotly::plotlyOutput("nldr_plot", height = "800px", width = "100%")
         ),
 
         bslib::card(
           bslib::card_header("Visualization Information"),
           shiny::verbatimTextOutput("vis_info")
         )
-      )
+      )),
     ),
 
     bslib::nav_spacer(),
