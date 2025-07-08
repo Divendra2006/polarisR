@@ -314,7 +314,7 @@ nldr_viz_server <- function(input, output, session) {
     pal <- color_palette()
 
     p <- ggplot2::ggplot(sd_obj, ggplot2::aes(x = x, y = y, color = color, text = color)) +
-      ggplot2::geom_point(size = 1.5, alpha = 0.7) +
+      ggplot2::geom_point(size = 2, alpha = 0.7) +
       ggplot2::labs(
         x = paste(result$method, "Dimension 1"),
         y = paste(result$method, "Dimension 2"),
@@ -392,15 +392,15 @@ nldr_viz_server <- function(input, output, session) {
       input$tour_display_type,
       "Scatter" = {
         shiny::req(input$tour_alpha)
-        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1.5)
+        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1)
       },
       "Sage" = {
         shiny::req(input$tour_gamma)
-        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1.5)
+        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1)
       },
       "Slice" = {
         shiny::req(input$tour_slice_volume)
-        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1.5)
+        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1)
       }
     )
   })
