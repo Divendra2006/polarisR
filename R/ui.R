@@ -113,6 +113,57 @@ nldr_viz_ui <- function() {
     bslib::nav_spacer(),
 
     bslib::nav_panel(
+      title = "Dynamic Tour",
+      bslib::layout_sidebar(
+        sidebar = bslib::sidebar(
+          width = 300,
+          bslib::card(
+            bslib::card_header("Tour Options"),
+
+            shiny::radioButtons("tour_display_type", "Select Tour Display:",
+                                choices = c("Scatter", "Sage", "Slice"), inline = TRUE),
+            shiny::hr(),
+            shiny::checkboxInput("tour_axes", "Show Axes", value = FALSE),
+            shiny::hr(),
+            shiny::conditionalPanel(
+              condition = "input.tour_display_type == 'Scatter'",
+              shiny::sliderInput("tour_alpha", "Point Opacity (Alpha):",
+                                 min = 0.1, max = 1, value = 0.7, step = 0.05)
+            ),
+            shiny::conditionalPanel(
+              condition = "input.tour_display_type == 'Sage'",
+              shiny::sliderInput("tour_gamma", "Gamma:",
+                                 min = 0, max = 5, value = 1, step = 0.1)
+            ),
+            shiny::conditionalPanel(
+              condition = "input.tour_display_type == 'Slice'",
+              shiny::sliderInput("tour_slice_volume", "Slice Relative Volume:",
+                                 min = 0.01, max = 0.5, value = 0.1, step = 0.01)
+            ),
+            shiny::hr(),
+            shiny::checkboxInput("enable_brushing", "Enable Linked Brushing", value = TRUE)
+
+
+          ),
+        ),
+        bslib::layout_columns(
+          col_widths = c(6, 6),
+          height = "650px",
+          bslib::card(
+            bslib::card_header("NLDR Visualization"),
+            plotly::plotlyOutput("nldr_plot_tour_tab", height = "600px",width = "600px")
+          ),
+          bslib::card(
+            bslib::card_header("Dynamic Tour of High-Dimensional Data"),
+            shiny::uiOutput("dynamic_tour_output_ui", height = "600px", width = "600px")
+          )
+        )
+      )
+    ),
+
+    bslib::nav_spacer(),
+
+    bslib::nav_panel(
       title = "Diagnoising",
       bslib::card(
         bslib::card_header("About NLDR Visualization Tool"),

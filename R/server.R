@@ -6,6 +6,8 @@
 #' @param output Shiny output object
 #' @param session Shiny session object
 #' @importFrom magrittr %>%
+#' @importFrom crosstalk SharedData
+#' @importFrom plotly highlight
 #' @return A Shiny server function
 #' @keywords internal
 nldr_viz_server <- function(input, output, session) {
@@ -16,6 +18,8 @@ nldr_viz_server <- function(input, output, session) {
   available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense", "trees"))
 
   nldr_datasets <- shiny::reactiveVal(list())
+  shared_vis_data <- shiny::reactiveVal(NULL)
+  color_palette <- shiny::reactiveVal(NULL)
   nldr_counter <- shiny::reactiveVal(0)
 
   check_empty_cells <- function(data) {
@@ -261,6 +265,21 @@ nldr_viz_server <- function(input, output, session) {
         })
       }
       vis_results(result)
+      color_as_factor <- as.factor(result$color_values)
+      color_lvls <- levels(color_as_factor)
+
+      pal <- scales::hue_pal()(length(color_lvls))
+      names(pal) <- color_lvls
+      color_palette(pal)
+      plot_data_for_shared <- data.frame(
+        x = result$coords[, 1],
+        y = result$coords[, 2],
+        color = result$color_values
+      )
+      plot_data_for_shared <- cbind(plot_data_for_shared, as.data.frame(scaled_data))
+
+      shared_vis_data(SharedData$new(plot_data_for_shared, key = ~row.names(plot_data_for_shared)))
+
       id <- nldr_counter() + 1
       nldr_counter(id)
       method_settings <- if(input$nldr_method == "t-SNE") {
@@ -273,6 +292,7 @@ nldr_viz_server <- function(input, output, session) {
         id = id,
         name = method_settings,
         result = result,
+        tour_input_data = plot_data_for_shared,
         timestamp = Sys.time()
       )
       nldr_datasets(current)
@@ -287,16 +307,14 @@ nldr_viz_server <- function(input, output, session) {
     })
   })
 
-  output$nldr_plot <- plotly::renderPlotly({
-    shiny::req(vis_results())
+  nldr_plotly_object <- shiny::reactive({
+    shiny::req(shared_vis_data())
+    sd_obj <- shared_vis_data()
     result <- vis_results()
-    plot_data <- data.frame(
-      x = result$coords[, 1],
-      y = result$coords[, 2],
-      color = result$color_values
-    )
-    p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = x, y = y, color = color, text = color)) +
-      ggplot2::geom_point(size = 3, alpha = 0.7) +
+    pal <- color_palette()
+
+    p <- ggplot2::ggplot(sd_obj, ggplot2::aes(x = x, y = y, color = color, text = color)) +
+      ggplot2::geom_point(size = 1.5, alpha = 0.7) +
       ggplot2::labs(
         x = paste(result$method, "Dimension 1"),
         y = paste(result$method, "Dimension 2"),
@@ -305,11 +323,90 @@ nldr_viz_server <- function(input, output, session) {
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "right")
 
-    plotly::layout(
-      plotly::ggplotly(p, tooltip = "text"),
-      autosize = TRUE,
-      legend = list(title = list(text = result$color_col))
+    if (isTRUE(input$enable_brushing)) {
+      plotly::layout(
+        plotly::highlight(plotly::ggplotly(p, tooltip = "text"),
+                          on = "plotly_selected",
+                          off = "plotly_doubleclick",
+                          opacityDim = 0.2),
+        autosize = TRUE,
+        legend = list(title = list(text = result$color_col))
+      )
+    } else {
+      plotly::layout(
+        plotly::ggplotly(p, tooltip = "text"),
+        autosize = TRUE,
+        legend = list(title = list(text = result$color_col))
+      )
+    }
+  })
+
+  output$nldr_plot <- plotly::renderPlotly({
+    nldr_plotly_object()
+  })
+
+  output$nldr_plot_tour_tab <- plotly::renderPlotly({
+    nldr_plotly_object()
+  })
+
+  output$dynamic_tour_output_ui <- shiny::renderUI({
+    shiny::req(
+      shared_vis_data(),
+      input$tour_display_type
     )
+    detourr::displayScatter2dOutput("tour_plot_2d", height = "550px")
+  })
+
+  tour_object <- shiny::reactive({
+    shiny::req(
+      shared_vis_data(),
+      input$tour_display_type,
+      !is.null(input$tour_axes),
+      color_palette()
+    )
+
+    sd_obj <- shared_vis_data()
+    pal <- color_palette()
+    all_cols <- names(sd_obj$data())
+    projection_cols <- all_cols[!all_cols %in% c("x", "y", "color")]
+
+    if (length(projection_cols) < 2) {
+      shiny::showNotification(
+        "Not enough high-dimensional columns for the tour. Need at least 2.",
+        type = "warning", duration = 3
+      )
+      return(NULL)
+    }
+    data_for_tour <- if (isTRUE(input$enable_brushing)) {
+      sd_obj
+    } else {
+      sd_obj$data()
+    }
+    detour_obj <- detourr::detour(
+      data_for_tour,
+      detourr::tour_aes(projection = projection_cols,
+                        colour = color)
+    ) |>
+      detourr::tour_path(tourr::grand_tour(2L), fps = 30)
+    switch(
+      input$tour_display_type,
+      "Scatter" = {
+        shiny::req(input$tour_alpha)
+        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1.5)
+      },
+      "Sage" = {
+        shiny::req(input$tour_gamma)
+        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1.5)
+      },
+      "Slice" = {
+        shiny::req(input$tour_slice_volume)
+        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1.5)
+      }
+    )
+  })
+
+  output$tour_plot_2d <- detourr::shinyRenderDisplayScatter2d({
+    tour_object()
   })
 
   output$vis_info <- shiny::renderPrint({
@@ -430,6 +527,15 @@ nldr_viz_server <- function(input, output, session) {
       input_id <- paste0("nldr_", ds$id)
       if (!is.null(input[[input_id]]) && input[[input_id]]) {
         vis_results(ds$result)
+        loaded_data <- ds$tour_input_data
+        color_as_factor <- as.factor(loaded_data$color)
+        color_lvls <- levels(color_as_factor)
+        pal <- scales::hue_pal()(length(color_lvls))
+        names(pal) <- color_lvls
+        color_palette(pal)
+        loaded_data$color <- color_as_factor
+        shared_vis_data(SharedData$new(loaded_data, key = ~row.names(loaded_data)))
+
         shiny::updateCheckboxInput(session, input_id, value = FALSE)
         shiny::showNotification(paste("Loaded NLDR dataset:", ds$name),
                                 type = "message", duration = 2)
