@@ -323,6 +323,15 @@ nldr_viz_server <- function(input, output, session) {
       ggplot2::theme_minimal() +
       ggplot2::theme(legend.position = "right")
 
+    x_range <- range(sd_obj$data()$x, na.rm = TRUE)
+    y_range <- range(sd_obj$data()$y, na.rm = TRUE)
+
+    overall_range <- range(c(x_range, y_range))
+    axis_padding <- diff(overall_range) * 0.05 
+
+    axis_min <- overall_range[1] - axis_padding
+    axis_max <- overall_range[2] + axis_padding
+
     if (isTRUE(input$enable_brushing)) {
       plotly::layout(
         plotly::highlight(plotly::ggplotly(p, tooltip = "text"),
@@ -330,13 +339,33 @@ nldr_viz_server <- function(input, output, session) {
                           off = "plotly_doubleclick",
                           opacityDim = 0.2),
         autosize = TRUE,
-        legend = list(title = list(text = result$color_col))
+        legend = list(title = list(text = result$color_col)),
+        xaxis = list(
+          range = c(axis_min, axis_max),
+          constrain = "domain",
+          scaleanchor = "y",
+          scaleratio = 1
+        ),
+        yaxis = list(
+          range = c(axis_min, axis_max),
+          constrain = "domain"
+        )
       )
     } else {
       plotly::layout(
         plotly::ggplotly(p, tooltip = "text"),
         autosize = TRUE,
-        legend = list(title = list(text = result$color_col))
+        legend = list(title = list(text = result$color_col)),
+        xaxis = list(
+          range = c(axis_min, axis_max),
+          constrain = "domain",
+          scaleanchor = "y",
+          scaleratio = 1
+        ),
+        yaxis = list(
+          range = c(axis_min, axis_max),
+          constrain = "domain"
+        )
       )
     }
   })
@@ -357,7 +386,26 @@ nldr_viz_server <- function(input, output, session) {
   })
 
   output$nldr_plot_tour_tab <- plotly::renderPlotly({
-    nldr_plotly_object()
+    my_plot <- nldr_plotly_object()
+    my_plot %>%
+      plotly::layout(
+        margin = list(
+          l = 50, 
+          r = 50, 
+          b = 50,    
+          t = 20     
+        ),
+        xaxis = list(
+          automargin = TRUE,
+          title = list(standoff = 10)  
+        ),
+        yaxis = list(
+          automargin = TRUE,
+          title = list(standoff = 10)  
+        ),
+        plot_bgcolor = 'rgba(0,0,0,0)',
+        paper_bgcolor = 'rgba(0,0,0,0)'
+      )
   })
 
   output$dynamic_tour_output_ui <- shiny::renderUI({
@@ -365,7 +413,7 @@ nldr_viz_server <- function(input, output, session) {
       shared_vis_data(),
       input$tour_display_type
     )
-    detourr::displayScatter2dOutput("tour_plot_2d", height = "550px")
+    detourr::displayScatter2dOutput("tour_plot_2d", height = "580px")
   })
 
   tour_object <- shiny::reactive({

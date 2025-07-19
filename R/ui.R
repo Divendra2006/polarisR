@@ -149,14 +149,20 @@ nldr_viz_ui <- function() {
         ),
         bslib::layout_columns(
           col_widths = c(6, 6),
-          height = "650px",
+          height = "700px",
           bslib::card(
             bslib::card_header("NLDR Visualization"),
-            plotly::plotlyOutput("nldr_plot_tour_tab", height = "600px",width = "600px")
+            bslib::card_body(
+              style = "padding-top: 10px; padding-bottom: 10px;",
+              plotly::plotlyOutput("nldr_plot_tour_tab", height = "580px")
+            )
           ),
           bslib::card(
             bslib::card_header("Dynamic Tour of High-Dimensional Data"),
-            shiny::uiOutput("dynamic_tour_output_ui", height = "600px", width = "600px")
+            bslib::card_body(
+              style = "padding-top: 10px; padding-bottom: 10px;",
+              shiny::uiOutput("dynamic_tour_output_ui")
+            )
           )
         )
       )
