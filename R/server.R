@@ -17,10 +17,25 @@ nldr_viz_server <- function(input, output, session) {
   custom_datasets <- shiny::reactiveVal(load_custom_datasets())
   available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense", "trees"))
 
+  quollr_model <- shiny::reactiveVal(NULL)
+  quollr_results <- shiny::reactiveVal(NULL)
+  show_langevitour_flag <- shiny::reactiveVal(FALSE)
+  binwidth_optimization_results <- shiny::reactiveVal(NULL)
+  optimal_config <- shiny::reactiveVal(NULL)
+
   nldr_datasets <- shiny::reactiveVal(list())
   shared_vis_data <- shiny::reactiveVal(NULL)
   color_palette <- shiny::reactiveVal(NULL)
   nldr_counter <- shiny::reactiveVal(0)
+
+  visualization_config <- shiny::reactive({
+    list(
+      show_hexagons = if(is.null(input$quollr_show_hexagons)) FALSE else input$quollr_show_hexagons,
+      color_by_density = if(is.null(input$quollr_color_by_density)) TRUE else input$quollr_color_by_density,
+      remove_low_density = if(is.null(input$quollr_remove_low_density)) FALSE else input$quollr_remove_low_density,
+      density_threshold = if(is.null(input$quollr_density_threshold)) 0.1 else input$quollr_density_threshold
+    )
+  })
 
   check_empty_cells <- function(data) {
     if (is.null(data) || nrow(data) == 0) return(list(has_empty = FALSE))
@@ -35,6 +50,35 @@ nldr_viz_server <- function(input, output, session) {
       ))
     }
     return(list(has_empty = FALSE))
+  }
+
+  validate_quollr_data <- function(vis_data) {
+    issues <- character(0)
+
+    if (nrow(vis_data) < 10) {
+      issues <- c(issues, "Dataset too small (need at least 10 points)")
+    }
+
+    required_cols <- c("x", "y")
+    missing_cols <- setdiff(required_cols, names(vis_data))
+    if (length(missing_cols) > 0) {
+      issues <- c(issues, paste("Missing required columns:", paste(missing_cols, collapse = ", ")))
+    }
+
+    numeric_cols <- sapply(vis_data, is.numeric)
+    excluded_cols <- c("x", "y", "color")
+    available_cols <- names(vis_data)[numeric_cols]
+    highd_cols <- setdiff(available_cols, excluded_cols)
+
+    if (length(highd_cols) < 2) {
+      issues <- c(issues, "Need at least 2 high-dimensional numeric columns")
+    }
+
+    if (any(is.na(vis_data$x)) || any(is.na(vis_data$y))) {
+      issues <- c(issues, "Missing values found in x or y coordinates")
+    }
+
+    return(issues)
   }
 
   shiny::observe({
@@ -327,7 +371,7 @@ nldr_viz_server <- function(input, output, session) {
     y_range <- range(sd_obj$data()$y, na.rm = TRUE)
 
     overall_range <- range(c(x_range, y_range))
-    axis_padding <- diff(overall_range) * 0.05 
+    axis_padding <- diff(overall_range) * 0.05
 
     axis_min <- overall_range[1] - axis_padding
     axis_max <- overall_range[2] + axis_padding
@@ -390,18 +434,18 @@ nldr_viz_server <- function(input, output, session) {
     my_plot %>%
       plotly::layout(
         margin = list(
-          l = 50, 
-          r = 50, 
-          b = 50,    
-          t = 20     
+          l = 50,
+          r = 50,
+          b = 50,
+          t = 20
         ),
         xaxis = list(
           automargin = TRUE,
-          title = list(standoff = 10)  
+          title = list(standoff = 10)
         ),
         yaxis = list(
           automargin = TRUE,
-          title = list(standoff = 10)  
+          title = list(standoff = 10)
         ),
         plot_bgcolor = 'rgba(0,0,0,0)',
         paper_bgcolor = 'rgba(0,0,0,0)'
@@ -599,6 +643,523 @@ nldr_viz_server <- function(input, output, session) {
         shiny::showNotification(paste("Loaded NLDR dataset:", ds$name),
                                 type = "message", duration = 2)
       }
+    })
+  })
+
+  shiny::observeEvent(c(input$auto_bin_range, shared_vis_data()), {
+    shiny::req(shared_vis_data())
+
+    if (input$auto_bin_range) {
+      data <- shared_vis_data()$data()
+      n_points <- nrow(data)
+
+      min_suggested <- max(3, floor(sqrt(n_points/100)))
+      max_suggested <- min(25, floor(sqrt(n_points/5)))
+
+      if (max_suggested <= min_suggested) {
+        max_suggested <- min_suggested + 5
+      }
+
+      shiny::updateNumericInput(session, "min_bins", value = min_suggested)
+      shiny::updateNumericInput(session, "max_bins", value = max_suggested)
+
+      shiny::showNotification(
+        paste("Auto-calculated range:", min_suggested, "to", max_suggested),
+        type = "message", duration = 2
+      )
+    }
+  })
+
+  shiny::observeEvent(c(input$min_bins, input$max_bins), {
+    if (input$auto_bin_range && !is.null(input$min_bins)) {
+      shiny::updateCheckboxInput(session, "auto_bin_range", value = FALSE)
+    }
+  }, ignoreInit = TRUE)
+
+  shiny::observeEvent(input$run_binwidth_optimization, {
+    shiny::req(shared_vis_data(), vis_results())
+
+    tryCatch({
+      shiny::withProgress(message = 'Optimizing binwidth...', {
+        vis_data <- shared_vis_data()$data()
+        vis_result <- vis_results()
+        numeric_cols <- sapply(vis_data, is.numeric)
+        excluded_cols <- c("x", "y", "color")
+        available_cols <- names(vis_data)[numeric_cols]
+        highd_cols <- setdiff(available_cols, excluded_cols)
+
+        training_data <- vis_data[, highd_cols, drop = FALSE]
+        new_col_names <- paste0("x", seq_along(highd_cols))
+        names(training_data) <- new_col_names
+        training_data$ID <- seq_len(nrow(training_data))
+        embedding_data <- data.frame(
+          EMBEDDING1 = vis_data$x,
+          EMBEDDING2 = vis_data$y,
+          ID = seq_len(nrow(vis_data))
+        )
+        x_range <- range(embedding_data$EMBEDDING1, na.rm = TRUE)
+        y_range <- range(embedding_data$EMBEDDING2, na.rm = TRUE)
+        x_span <- diff(x_range)
+        y_span <- diff(y_range)
+
+        embedding_scaled <- data.frame(
+          EMBEDDING1 = (embedding_data$EMBEDDING1 - x_range[1]) / x_span,
+          EMBEDDING2 = (embedding_data$EMBEDDING2 - y_range[1]) / y_span,
+          ID = embedding_data$ID
+        )
+        bin_x_vec <- seq(input$min_bins, input$max_bins, by = 1)
+        error_df_all <- data.frame()
+
+        total_iterations <- length(bin_x_vec)
+
+        for (i in seq_along(bin_x_vec)) {
+          bin_x <- bin_x_vec[i]
+          bin_y <- bin_x
+          shiny::incProgress(1/total_iterations, detail = paste("Testing", bin_x, "x", bin_y, "bins"))
+          tryCatch({
+            model_result <- quollr::fit_highd_model(
+              training_data = training_data,
+              nldr_df_with_id = embedding_scaled,
+              x = "EMBEDDING1",
+              y = "EMBEDDING2",
+              num_bins_x = bin_x,
+              num_bins_y = bin_y,
+              is_rm_lwd_hex = FALSE,
+              col_start_2d = "EMBEDDING",
+              col_start_highd = "x"
+            )
+
+            pred_result <- quollr::predict_emb(
+              test_data = training_data,
+              df_bin_centroids = model_result$df_bin_centroids,
+              df_bin = model_result$df_bin,
+              type_NLDR = vis_result$method
+            )
+
+            pred_df <- as.data.frame(do.call(cbind, pred_result))
+            evaluation <- quollr::gen_summary(
+              test_data = training_data,
+              prediction_df = pred_df,
+              df_bin = model_result$df_bin,
+              col_start = "x"
+            )
+
+            error_row <- data.frame(
+              bin_x = bin_x,
+              bin_y = bin_y,
+              total_bins = bin_x * bin_y,
+              non_empty_bins = nrow(model_result$df_bin_centroids),
+              MSE = evaluation$mse,
+              AIC = evaluation$aic,
+              binwidth_x = 1/bin_x,
+              binwidth_y = 1/bin_y,
+              method = vis_result$method,
+              stringsAsFactors = FALSE
+            )
+            error_df_all <- rbind(error_df_all, error_row)
+
+          }, error = function(e) {
+            cat("Skipping bin configuration", bin_x, "x", bin_y, "- Error:", e$message, "\n")
+          })
+        }
+        if (nrow(error_df_all) == 0) {
+          stop("No valid bin configurations found")
+        }
+        optimal_row <- error_df_all[which.min(error_df_all$MSE), ]
+        binwidth_optimization_results(error_df_all)
+        optimal_config(optimal_row)
+
+        shiny::showNotification(
+          paste("Optimization completed! Optimal:", optimal_row$bin_x, "x", optimal_row$bin_y, "bins"),
+          type = "message", duration = 3
+        )
+      })
+
+    }, error = function(e) {
+      shiny::showModal(shiny::modalDialog(
+        title = "Binwidth Optimization Error",
+        paste("Error during optimization:", e$message),
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+    })
+  })
+
+  shiny::observeEvent(input$run_quollr_analysis, {
+    shiny::req(shared_vis_data(), vis_results())
+    if (is.null(optimal_config())) {
+      shiny::showModal(shiny::modalDialog(
+        title = "Optimization Required",
+        "Please run binwidth optimization first to determine optimal configuration.",
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+      return()
+    }
+    tryCatch({
+      shiny::withProgress(message = 'Running Quollr Analysis...', {
+        vis_data <- shared_vis_data()$data()
+        vis_result <- vis_results()
+        optimal <- optimal_config()
+        cat("Total vis_data rows:", nrow(vis_data), "\n")
+        cat("Total vis_data columns:", ncol(vis_data), "\n")
+        cat("Column names:", paste(names(vis_data), collapse = ", "), "\n")
+        cat("Using optimal configuration:", optimal$bin_x, "x", optimal$bin_y, "\n")
+        numeric_cols <- sapply(vis_data, is.numeric)
+        excluded_cols <- c("x", "y", "color")
+        available_cols <- names(vis_data)[numeric_cols]
+        highd_cols <- setdiff(available_cols, excluded_cols)
+        if (length(highd_cols) == 0) {
+          stop("No high-dimensional columns found. Need numeric columns beyond x, y coordinates.")
+        }
+        cat("High-dimensional columns found:", paste(highd_cols, collapse = ", "), "\n")
+        cat("Number of high-d columns:", length(highd_cols), "\n")
+        training_data <- vis_data[, highd_cols, drop = FALSE]
+        new_col_names <- paste0("x", seq_along(highd_cols))
+        names(training_data) <- new_col_names
+        training_data$ID <- seq_len(nrow(training_data))
+        cat("Training data dimensions:", nrow(training_data), "x", ncol(training_data), "\n")
+        cat("Renamed columns:", paste(names(training_data), collapse = ", "), "\n")
+        embedding_data <- data.frame(
+          EMBEDDING1 = vis_data$x,
+          EMBEDDING2 = vis_data$y,
+          ID = seq_len(nrow(vis_data))
+        )
+        cat("Embedding data dimensions:", nrow(embedding_data), "x", ncol(embedding_data), "\n")
+        if (any(is.na(embedding_data$EMBEDDING1)) || any(is.na(embedding_data$EMBEDDING2))) {
+          stop("Missing values found in embedding coordinates")
+        }
+        if (any(!is.finite(embedding_data$EMBEDDING1)) || any(!is.finite(embedding_data$EMBEDDING2))) {
+          stop("Infinite values found in embedding coordinates")
+        }
+        cat("Embedding data range - X:", range(embedding_data$EMBEDDING1), "Y:", range(embedding_data$EMBEDDING2), "\n")
+        x_range <- range(embedding_data$EMBEDDING1, na.rm = TRUE)
+        y_range <- range(embedding_data$EMBEDDING2, na.rm = TRUE)
+        x_span <- diff(x_range)
+        y_span <- diff(y_range)
+        embedding_scaled <- data.frame(
+          EMBEDDING1 = (embedding_data$EMBEDDING1 - x_range[1]) / x_span,
+          EMBEDDING2 = (embedding_data$EMBEDDING2 - y_range[1]) / y_span,
+          ID = embedding_data$ID
+        )
+        cat("Scaled embedding dimensions:", nrow(embedding_scaled), "x", ncol(embedding_scaled), "\n")
+        cat("Scaled embedding range - X:", range(embedding_scaled$EMBEDDING1), "Y:", range(embedding_scaled$EMBEDDING2), "\n")
+        if (nrow(embedding_scaled) == 0) {
+          stop("Scaling resulted in empty dataset")
+        }
+        if (nrow(training_data) != nrow(embedding_scaled)) {
+          stop(paste("Data dimension mismatch: training_data has", nrow(training_data),
+                     "rows, embedding_scaled has", nrow(embedding_scaled), "rows"))
+        }
+        col_prefix <- "x"
+        cat("Using column prefix:", col_prefix, "\n")
+        cat("Starting model fitting with optimal bins:", optimal$bin_x, "x", optimal$bin_y, "\n")
+
+        model_result <- quollr::fit_highd_model(
+          training_data = training_data,
+          nldr_df_with_id = embedding_scaled,
+          x = "EMBEDDING1",
+          y = "EMBEDDING2",
+          num_bins_x = optimal$bin_x,
+          num_bins_y = optimal$bin_y,
+          is_rm_lwd_hex = input$quollr_remove_low_density,
+          benchmark_to_rm_lwd_hex = if(input$quollr_remove_low_density) input$quollr_density_threshold else NA,
+          col_start_2d = "EMBEDDING",
+          col_start_highd = col_prefix
+        )
+        cat("Model fitting completed successfully\n")
+        quollr_model(model_result)
+        pred_result <- quollr::predict_emb(
+          test_data = training_data,
+          df_bin_centroids = model_result$df_bin_centroids,
+          df_bin = model_result$df_bin,
+          type_NLDR = vis_result$method
+        )
+        pred_df <- as.data.frame(do.call(cbind, pred_result))
+        evaluation <- quollr::gen_summary(
+          test_data = training_data,
+          prediction_df = pred_df,
+          df_bin = model_result$df_bin,
+          col_start = col_prefix
+        )
+        quollr_results(list(
+          model = model_result,
+          predictions = pred_df,
+          evaluation = evaluation,
+          embedding_scaled = embedding_scaled,
+          training_data = training_data,
+          original_column_mapping = setNames(highd_cols, new_col_names),
+          optimal_config_used = optimal
+        ))
+        shiny::showNotification("Quollr analysis completed successfully using optimal configuration!",
+                                type = "message", duration = 3)
+      })
+
+    }, error = function(e) {
+      cat("Detailed error information:\n")
+      cat("Error message:", e$message, "\n")
+
+      shiny::showModal(shiny::modalDialog(
+        title = "Quollr Analysis Error",
+        shiny::div(
+          shiny::h4("Error Details:"),
+          shiny::p(paste("Error message:", e$message)),
+          shiny::hr(),
+          shiny::h4("Potential Solutions:"),
+          shiny::tags$ul(
+            shiny::tags$li("Try running binwidth optimization with a different range"),
+            shiny::tags$li("Check for extreme values in your embedding coordinates"),
+            shiny::tags$li("Ensure your NLDR visualization completed successfully before running Quollr"),
+            shiny::tags$li("Try with a smaller dataset to test the implementation")
+          )
+        ),
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+    })
+  })
+
+  output$binwidth_mse_plot <- plotly::renderPlotly({
+    shiny::req(binwidth_optimization_results())
+    results <- binwidth_optimization_results()
+    optimal <- optimal_config()
+    p <- ggplot2::ggplot(results, ggplot2::aes(x = binwidth_x, y = MSE)) +
+      ggplot2::geom_point(size = 2, alpha = 0.7, color = "steelblue") +
+      ggplot2::geom_line(size = 0.5, color = "steelblue") +
+      ggplot2::geom_point(data = optimal,
+                          ggplot2::aes(x = binwidth_x, y = MSE),
+                          color = "red", size = 4, shape = 21, fill = "red") +
+      ggplot2::labs(
+        title = "MSE vs Binwidth Optimization",
+        x = "Binwidth (1/bins_x)",
+        y = "Mean Squared Error (MSE)",
+        caption = "Red point indicates optimal configuration"
+      ) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(size = 14, hjust = 0.5),
+        axis.text = ggplot2::element_text(size = 10),
+        axis.title = ggplot2::element_text(size = 12)
+      )
+
+    plotly::ggplotly(p, tooltip = c("x", "y")) %>%
+      plotly::layout(
+        annotations = list(
+          x = optimal$binwidth_x, y = optimal$MSE,
+          text = paste("Optimal:", optimal$bin_x, "x", optimal$bin_y),
+          showarrow = TRUE, arrowhead = 4, arrowsize = .5, ax = 20, ay = -40
+        )
+      )
+  })
+
+  output$binwidth_results_table <- DT::renderDT({
+    shiny::req(binwidth_optimization_results())
+    results <- binwidth_optimization_results()
+    display_results <- results %>%
+      dplyr::arrange(MSE) %>%
+      dplyr::mutate(
+        MSE = round(MSE, 4),
+        AIC = round(AIC, 2),
+        binwidth_x = round(binwidth_x, 3)
+      ) %>%
+      dplyr::select(
+        `Bins X` = bin_x,
+        `Bins Y` = bin_y,
+        `Total Bins` = total_bins,
+        `Non-Empty Bins` = non_empty_bins,
+        `Binwidth` = binwidth_x,
+        `MSE` = MSE,
+        `AIC` = AIC,
+        `Method` = method
+      )
+    DT::datatable(
+      display_results,
+      options = list(
+        pageLength = 15,
+        scrollX = TRUE,
+        order = list(list(5, 'asc'))
+      ),
+      rownames = FALSE
+    ) %>%
+      DT::formatStyle(
+        "MSE",
+        backgroundColor = DT::styleInterval(
+          cuts = quantile(display_results$MSE, c(0.1, 0.9)),
+          values = c("lightgreen", "white", "lightcoral")
+        )
+      )
+  })
+
+  output$quollr_fit_plot <- plotly::renderPlotly({
+    shiny::req(quollr_results())
+    results <- quollr_results()
+    tryCatch({
+      pred_data <- results$predictions
+      pred_cols <- grep("pred_EMBEDDING", names(pred_data), value = TRUE)
+      if (length(pred_cols) < 2) {
+        pred_cols <- grep("pred_", names(pred_data), value = TRUE)[1:2]
+      }
+      if (length(pred_cols) >= 2) {
+        pred_coords <- as.matrix(pred_data[, pred_cols[1:2]])
+      } else {
+        stop("Cannot find prediction coordinate columns")
+      }
+      original_coords <- as.matrix(results$embedding_scaled[, c("EMBEDDING1", "EMBEDDING2")])
+      if (nrow(pred_coords) != nrow(original_coords)) {
+        min_rows <- min(nrow(pred_coords), nrow(original_coords))
+        pred_coords <- pred_coords[1:min_rows, , drop = FALSE]
+        original_coords <- original_coords[1:min_rows, , drop = FALSE]
+      }
+      residuals <- sqrt(rowSums((pred_coords - original_coords)^2, na.rm = TRUE))
+      plot_data <- data.frame(
+        Original_X = original_coords[,1],
+        Original_Y = original_coords[,2],
+        Predicted_X = pred_coords[,1],
+        Predicted_Y = pred_coords[,2],
+        Residual = residuals
+      )
+      plot_data <- plot_data[complete.cases(plot_data), ]
+      if (nrow(plot_data) == 0) {
+        p <- ggplot2::ggplot() +
+          ggplot2::annotate("text", x = 0.5, y = 0.5,
+                            label = "No valid prediction data available") +
+          ggplot2::theme_minimal()
+      } else {
+        p <- ggplot2::ggplot(plot_data) +
+          ggplot2::geom_point(ggplot2::aes(x = Original_X, y = Original_Y, color = Residual),
+                              size = 2, alpha = 0.7) +
+          ggplot2::scale_color_viridis_c(name = "Prediction\nError") +
+          ggplot2::labs(
+            title = "Model Fit Quality",
+            x = "Original 2D Embedding Dimension 1",
+            y = "Original 2D Embedding Dimension 2"
+          ) +
+          ggplot2::theme_minimal()
+      }
+      plotly::ggplotly(p)
+
+    }, error = function(e) {
+      p <- ggplot2::ggplot() +
+        ggplot2::annotate("text", x = 0.5, y = 0.5,
+                          label = paste("Error creating fit plot:", e$message)) +
+        ggplot2::theme_minimal()
+      plotly::ggplotly(p)
+    })
+  })
+
+  output$current_config_summary <- shiny::renderText({
+    optimal <- optimal_config()
+    if (is.null(optimal)) {
+      "No optimization run yet.\nRun binwidth optimization to configure analysis."
+    } else {
+      paste0(
+        "Bins: ", optimal$bin_x, " × ", optimal$bin_y, "\n",
+        "Remove low-density: ", input$quollr_remove_low_density, "\n",
+        if (input$quollr_remove_low_density) {
+          paste0("Density threshold: ", input$quollr_density_threshold)
+        } else {
+          "Density threshold: N/A"
+        }
+      )
+    }
+  })
+
+  output$optimal_binwidth_summary <- shiny::renderPrint({
+    shiny::req(optimal_config())
+
+    optimal <- optimal_config()
+
+    cat("Optimal Configuration\n")
+    cat("====================\n")
+    cat("Bins (X × Y):", optimal$bin_x, "×", optimal$bin_y, "\n")
+    cat("Total bins:", optimal$total_bins, "\n")
+    cat("Non-empty bins:", optimal$non_empty_bins, "\n")
+    cat("Binwidth:", round(optimal$binwidth_x, 3), "\n")
+    cat("MSE:", round(optimal$MSE, 4), "\n")
+    cat("AIC:", round(optimal$AIC, 2), "\n")
+  })
+
+  output$quollr_model_summary <- shiny::renderPrint({
+    shiny::req(quollr_results())
+    results <- quollr_results()
+    eval_metrics <- results$evaluation
+    cat("Quollr Model Summary\n")
+    cat("===================\n\n")
+    if (!is.null(results$optimal_config_used)) {
+      optimal <- results$optimal_config_used
+      cat("Configuration Used:\n")
+      cat("- Hexagonal bins (X × Y):", optimal$bin_x, "×", optimal$bin_y, "\n")
+      cat("- Remove low-density hexagons:", input$quollr_remove_low_density, "\n")
+      if (input$quollr_remove_low_density) {
+        cat("- Density threshold:", input$quollr_density_threshold, "\n")
+      }
+      cat("- Number of non-empty bins:", nrow(results$model$df_bin_centroids), "\n\n")
+    }
+
+    cat("Model Performance:\n")
+    cat("- Mean Squared Error (MSE):", round(eval_metrics$mse, 4), "\n")
+    cat("- Akaike Information Criterion (AIC):", round(eval_metrics$aic, 4), "\n\n")
+
+    cat("Data Summary:\n")
+    cat("- Training observations:", nrow(results$training_data), "\n")
+    cat("- High-dimensional features:", ncol(results$training_data) - 1, "\n")
+  })
+  shiny::observeEvent(input$show_langevitour, {
+    shiny::req(quollr_results())
+    show_langevitour_flag(TRUE)
+  })
+  output$show_langevitour_ui <- shiny::reactive({
+    show_langevitour_flag()
+  })
+  shiny::outputOptions(output, "show_langevitour_ui", suspendWhenHidden = FALSE)
+  shiny::observeEvent(input$run_quollr_analysis, {
+    show_langevitour_flag(FALSE)
+  })
+
+  output$langevitour_output <- shiny::renderUI({
+    shiny::req(show_langevitour_flag(), quollr_results())
+    results <- quollr_results()
+    tryCatch({
+      df_clean <- results$training_data
+      if ("ID" %in% names(df_clean)) {
+        df_clean <- df_clean[, !names(df_clean) %in% "ID", drop = FALSE]
+      }
+      df_clean <- df_clean[complete.cases(df_clean), ]
+      if (nrow(df_clean) == 0) {
+        return(shiny::div(
+          class = "alert alert-warning",
+          "No complete cases available for 3D tour after removing missing values."
+        ))
+      }
+      cat("Clean data for langevitour:", nrow(df_clean), "rows,", ncol(df_clean), "columns\n")
+      df_bin_clean <- results$model$df_bin
+      df_bin_clean <- df_bin_clean[complete.cases(df_bin_clean), ]
+      df_centroids_clean <- results$model$df_bin_centroids
+      df_centroids_clean <- df_centroids_clean[complete.cases(df_centroids_clean), ]
+      col_prefix <- "x"
+      tour_obj <- quollr::show_langevitour(
+        df = df_clean,
+        df_b = df_bin_clean,
+        df_b_with_center_data = df_centroids_clean,
+        col_start = col_prefix
+      )
+      shiny::div(
+        style = "height: 400px; width: 100%;",
+        tour_obj
+      )
+    }, error = function(e) {
+      shiny::div(
+        class = "alert alert-warning",
+        shiny::h5("Unable to generate 3D tour"),
+        shiny::p("Error details:", e$message),
+        shiny::hr(),
+        shiny::p("This may be due to:"),
+        shiny::tags$ul(
+          shiny::tags$li("Insufficient data points after cleaning"),
+          shiny::tags$li("Missing values in high-dimensional data"),
+          shiny::tags$li("Incompatible data structure for langevitour")
+        )
+      )
     })
   })
 }

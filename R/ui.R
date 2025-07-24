@@ -12,16 +12,19 @@ nldr_viz_ui <- function() {
 
     bslib::nav_spacer(),
 
+    # Dataset Preview Tab
     bslib::nav_panel(
       title = "Dataset Preview",
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           width = 300,
           gap = "3rem",
-          bslib::card(title = "Data Options",
-                      shiny::fileInput("file", "Upload Dataset", accept = c(".csv")),
-                      shiny::selectInput("example_data", "Example Datasets",
-                                         choices = c("None", "four_clusters", "pdfsense", "trees"))),
+          bslib::card(
+            title = "Data Options",
+            shiny::fileInput("file", "Upload Dataset", accept = c(".csv")),
+            shiny::selectInput("example_data", "Example Datasets",
+                               choices = c("None", "four_clusters", "pdfsense", "trees"))
+          ),
           bslib::card(
             bslib::card_header("Column Selection"),
             shiny::checkboxInput("auto_select", "Auto-select columns", value = TRUE),
@@ -50,8 +53,10 @@ nldr_viz_ui <- function() {
         )
       )
     ),
+
     bslib::nav_spacer(),
 
+    # Dataset Visualization Tab
     bslib::nav_panel(
       title = "Dataset Visualization",
       bslib::layout_sidebar(
@@ -79,7 +84,8 @@ nldr_viz_ui <- function() {
                                  min = 2, max = 50, value = 15, step = 1),
               shiny::sliderInput("min_dist", "Min. Distance:",
                                  min = 0.01, max = 0.99, value = 0.1, step = 0.01)
-            )),
+            )
+          ),
 
           bslib::card(
             bslib::card_header("Color Options"),
@@ -87,32 +93,35 @@ nldr_viz_ui <- function() {
             shiny::conditionalPanel(
               condition = "!input.auto_color",
               shiny::uiOutput("color_column_selection")
-            )),
+            )
+          ),
 
           bslib::card(
             bslib::card_header("Reproducibility Options"),
             shiny::numericInput("seed", "Random Seed:", value = 123, min = 1, max = 99999)
           ),
 
-          shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success"),
-
+          shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success")
         ),
+
         bslib::layout_columns(
-        col_widths = c(8, 4),
-        bslib::card(
-          bslib::card_header("Visualization"),
-          plotly::plotlyOutput("nldr_plot", height = "800px", width = "100%")
-        ),
+          col_widths = c(8, 4),
+          bslib::card(
+            bslib::card_header("Visualization"),
+            plotly::plotlyOutput("nldr_plot", height = "800px", width = "100%")
+          ),
 
-        bslib::card(
-          bslib::card_header("Visualization Information"),
-          shiny::verbatimTextOutput("vis_info")
+          bslib::card(
+            bslib::card_header("Visualization Information"),
+            shiny::verbatimTextOutput("vis_info")
+          )
         )
-      )),
+      )
     ),
 
     bslib::nav_spacer(),
 
+    # Dynamic Tour Tab
     bslib::nav_panel(
       title = "Dynamic Tour",
       bslib::layout_sidebar(
@@ -143,10 +152,9 @@ nldr_viz_ui <- function() {
             ),
             shiny::hr(),
             shiny::checkboxInput("enable_brushing", "Enable Linked Brushing", value = TRUE)
-
-
-          ),
+          )
         ),
+
         bslib::layout_columns(
           col_widths = c(6, 6),
           height = "700px",
@@ -171,23 +179,98 @@ nldr_viz_ui <- function() {
     bslib::nav_spacer(),
 
     bslib::nav_panel(
-      title = "Diagnoising",
-      bslib::card(
-        bslib::card_header("About NLDR Visualization Tool"),
-        bslib::card_body(
-          shiny::h3("Non-Linear Dimensionality Reduction Visualization Tool"),
-          shiny::p("This application allows you to visualize high-dimensional data using two popular non-linear dimensionality reduction techniques:"),
-          shiny::tags$ul(
-            shiny::tags$li(shiny::strong("t-SNE (t-Distributed Stochastic Neighbor Embedding):"),
-                           " A technique for dimensionality reduction that is particularly well suited for the visualization of high-dimensional datasets."),
-            shiny::tags$li(shiny::strong("UMAP (Uniform Manifold Approximation and Projection):"),
-                           " A dimensionality reduction technique that can be used for visualization similar to t-SNE, but also for general non-linear dimension reduction.")
+      title = "Diagnosing",
+      bslib::layout_sidebar(
+        sidebar = bslib::sidebar(
+          width = 300,
+          gap = "3rem",
+
+          # Binwidth Optimization Section
+          bslib::card(
+            bslib::card_header("Binwidth Optimization"),
+            shiny::numericInput("min_bins", "Minimum Bins:",
+                                value = 5, min = 3, max = 20, step = 1),
+            shiny::numericInput("max_bins", "Maximum Bins:",
+                                value = 15, min = 5, max = 50, step = 1),
+            shiny::checkboxInput("auto_bin_range", "Auto-calculate range", value = TRUE),
+            shiny::hr(),
+            shiny::actionButton("run_binwidth_optimization", "Optimize Binwidth",
+                                class = "btn-info", style = "width: 100%;")
           ),
-          shiny::p("Use the Dataset Preview tab to load and inspect your data, then move to the Dataset Visualization tab to create interactive visualizations.")
+
+          # NEW: Low-Density Hexagon Removal Card
+          bslib::card(
+            bslib::card_header("Low-Density Hexagon Removal"),
+            shiny::checkboxInput("quollr_remove_low_density", "Remove low-density hexagons", value = FALSE),
+            shiny::conditionalPanel(
+              condition = "input.quollr_remove_low_density",
+              shiny::numericInput("quollr_density_threshold", "Density Threshold:",
+                                  value = 0.1, min = 0.01, max = 1, step = 0.01),
+              shiny::helpText("Remove hexagons with density below this threshold")
+            )
+          ),
+
+          # Analysis Actions (simplified - no manual configuration needed)
+          bslib::card(
+            bslib::card_header("Analysis Actions"),
+            shiny::div(
+              style = "margin-bottom: 10px;",
+              shiny::helpText("Note: Run binwidth optimization first to automatically configure optimal bins")
+            ),
+            shiny::actionButton("run_quollr_analysis", "Run Quollr Analysis",
+                                class = "btn-success"),
+            shiny::actionButton("show_langevitour", "Show 3D Tour",
+                                class = "btn-secondary", style = "width: 100%;")
+          )
+        ),
+
+        # Main content area with Analysis on the left and Summary on the right
+        bslib::layout_columns(
+          col_widths = c(8, 4),
+
+          # Column 1: Analysis Results Card
+          bslib::card(
+            bslib::card_header("Analysis Results"),
+            shiny::tabsetPanel(
+              shiny::tabPanel("MSE vs Binwidth",
+                              plotly::plotlyOutput("binwidth_mse_plot", height = "500px")),
+              shiny::tabPanel("Optimization Table",
+                              DT::DTOutput("binwidth_results_table")),
+              shiny::tabPanel("Model Fit",
+                              plotly::plotlyOutput("quollr_fit_plot", height = "500px")),
+              shiny::tabPanel("High-Dimensional Model Tour",
+                              shiny::conditionalPanel(
+                                condition = "output.show_langevitour_ui",
+                                shiny::uiOutput("langevitour_output", height = "500px")
+                              ))
+            )
+          ),
+
+          # Column 2: Enhanced Summary Card
+          bslib::card(
+            bslib::card_header("Configuration & Summary"),
+            bslib::card_body(
+              # Current Configuration Section
+              shiny::h6("Current Configuration"),
+              shiny::div(
+                id = "current_config_display",
+                style = "background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;",
+                shiny::verbatimTextOutput("current_config_summary")
+              ),
+
+              # Optimization Results Section
+              shiny::h6("Optimization Results"),
+              shiny::verbatimTextOutput("optimal_binwidth_summary"),
+              shiny::hr(),
+
+              # Model Evaluation Section
+              shiny::h6("Model Evaluation"),
+              shiny::verbatimTextOutput("quollr_model_summary")
+            )
+          )
         )
       )
     ),
-
-    bslib::nav_spacer(),
+    bslib::nav_spacer()
   )
 }
