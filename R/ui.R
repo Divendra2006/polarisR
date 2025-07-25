@@ -12,7 +12,6 @@ nldr_viz_ui <- function() {
 
     bslib::nav_spacer(),
 
-    # Dataset Preview Tab
     bslib::nav_panel(
       title = "Dataset Preview",
       bslib::layout_sidebar(
@@ -161,14 +160,14 @@ nldr_viz_ui <- function() {
           bslib::card(
             bslib::card_header("NLDR Visualization"),
             bslib::card_body(
-              style = "padding-top: 10px; padding-bottom: 10px;",
-              plotly::plotlyOutput("nldr_plot_tour_tab", height = "580px")
+              padding = "0.5rem",
+              plotly::plotlyOutput("nldr_plot_tour_tab", height = "600px")
             )
           ),
           bslib::card(
             bslib::card_header("Dynamic Tour of High-Dimensional Data"),
             bslib::card_body(
-              style = "padding-top: 10px; padding-bottom: 10px;",
+              padding = "0.5rem",
               shiny::uiOutput("dynamic_tour_output_ui")
             )
           )
@@ -183,22 +182,17 @@ nldr_viz_ui <- function() {
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           width = 300,
-          gap = "3rem",
+          gap = "1rem",
 
-          # Binwidth Optimization Section
           bslib::card(
             bslib::card_header("Binwidth Optimization"),
-            shiny::numericInput("min_bins", "Minimum Bins:",
-                                value = 5, min = 3, max = 20, step = 1),
-            shiny::numericInput("max_bins", "Maximum Bins:",
-                                value = 15, min = 5, max = 50, step = 1),
+            shiny::numericInput("min_bins", "Minimum Bins:", value = 5, min = 3, max = 20, step = 1),
+            shiny::numericInput("max_bins", "Maximum Bins:", value = 15, min = 5, max = 50, step = 1),
             shiny::checkboxInput("auto_bin_range", "Auto-calculate range", value = TRUE),
             shiny::hr(),
-            shiny::actionButton("run_binwidth_optimization", "Optimize Binwidth",
-                                class = "btn-info", style = "width: 100%;")
+            shiny::actionButton("run_binwidth_optimization", "Optimize Binwidth", class = "btn-info w-100")
           ),
 
-          # NEW: Low-Density Hexagon Removal Card
           bslib::card(
             bslib::card_header("Low-Density Hexagon Removal"),
             shiny::checkboxInput("quollr_remove_low_density", "Remove low-density hexagons", value = FALSE),
@@ -210,61 +204,77 @@ nldr_viz_ui <- function() {
             )
           ),
 
-          # Analysis Actions (simplified - no manual configuration needed)
           bslib::card(
             bslib::card_header("Analysis Actions"),
+            shiny::helpText("Note: Run binwidth optimization first to automatically configure optimal bins", class = "mb-3"),
             shiny::div(
-              style = "margin-bottom: 10px;",
-              shiny::helpText("Note: Run binwidth optimization first to automatically configure optimal bins")
-            ),
-            shiny::actionButton("run_quollr_analysis", "Run Quollr Analysis",
-                                class = "btn-success"),
-            shiny::actionButton("show_langevitour", "Show 3D Tour",
-                                class = "btn-secondary", style = "width: 100%;")
+              class = "d-grid gap-2",
+              shiny::actionButton("run_quollr_analysis", "Run Quollr Analysis", class = "btn-success"),
+              shiny::actionButton("show_langevitour", "Show 3D Tour", class = "btn-secondary")
+            )
           )
         ),
 
-        # Main content area with Analysis on the left and Summary on the right
         bslib::layout_columns(
           col_widths = c(8, 4),
+          gap = "20px",
 
-          # Column 1: Analysis Results Card
           bslib::card(
             bslib::card_header("Analysis Results"),
-            shiny::tabsetPanel(
-              shiny::tabPanel("MSE vs Binwidth",
-                              plotly::plotlyOutput("binwidth_mse_plot", height = "500px")),
-              shiny::tabPanel("Optimization Table",
-                              DT::DTOutput("binwidth_results_table")),
-              shiny::tabPanel("Model Fit",
-                              plotly::plotlyOutput("quollr_fit_plot", height = "500px")),
-              shiny::tabPanel("High-Dimensional Model Tour",
-                              shiny::conditionalPanel(
-                                condition = "output.show_langevitour_ui",
-                                shiny::uiOutput("langevitour_output", height = "500px")
-                              ))
+            bslib::card_body(
+              # The wrapper div adds the requested space above the tabs
+              shiny::div(style = "padding-top: 30px;",
+                         shiny::tabsetPanel(
+                           shiny::tabPanel("MSE vs Binwidth",
+                                           shiny::div(class = "my-5",
+                                           plotly::plotlyOutput("binwidth_mse_plot", height = "500px"))),
+                           shiny::tabPanel("Optimization Table",
+                                           shiny::div(class = "my-5",
+                                           DT::DTOutput("binwidth_results_table"))),
+                           shiny::tabPanel("Model Fit",
+                                           shiny::div(class = "my-5",
+                                           plotly::plotlyOutput("quollr_fit_plot", height = "500px"))),
+                           shiny::tabPanel("High-Dimensional Model Tour",
+                                           shiny::div(
+                                             style = "margin-top: 1rem;",
+                                             shiny::conditionalPanel(
+                                               condition = "output.show_langevitour_ui",
+                                               shiny::uiOutput("langevitour_output")
+                                             ),
+                                             shiny::conditionalPanel(
+                                               condition = "!output.show_langevitour_ui",
+                                               shiny::div(
+                                                 class = "text-center p-5",
+                                                 style = "border: 2px dashed #ccc; border-radius: 8px; color: #666; background-color: #f9f9f9; height: 500px; display: flex; flex-direction: column; justify-content: center; align-items: center;",
+                                                 shiny::icon("film", "fa-3x"),
+                                                 shiny::h5("3D Model Tour", class = "mt-3"),
+                                                 shiny::p("Click 'Show 3D Tour' in the sidebar to generate the interactive model tour.")
+                                               )
+                                             )
+                                           )
+                           )
+                         )
+              )
             )
           ),
 
-          # Column 2: Enhanced Summary Card
           bslib::card(
             bslib::card_header("Configuration & Summary"),
             bslib::card_body(
-              # Current Configuration Section
-              shiny::h6("Current Configuration"),
+              style = "padding: 20px;",
+              shiny::h6("Current Configuration", style = "margin-bottom: 10px; color: #495057;"),
               shiny::div(
                 id = "current_config_display",
-                style = "background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;",
+                style = "background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #007bff;",
                 shiny::verbatimTextOutput("current_config_summary")
               ),
-
-              # Optimization Results Section
-              shiny::h6("Optimization Results"),
-              shiny::verbatimTextOutput("optimal_binwidth_summary"),
-              shiny::hr(),
-
-              # Model Evaluation Section
-              shiny::h6("Model Evaluation"),
+              shiny::h6("Optimization Results", style = "margin-bottom: 10px; color: #495057;"),
+              shiny::div(
+                style = "margin-bottom: 20px;",
+                shiny::verbatimTextOutput("optimal_binwidth_summary")
+              ),
+              shiny::hr(style = "margin: 20px 0; border-color: #dee2e6;"),
+              shiny::h6("Model Evaluation", style = "margin-bottom: 10px; color: #495057;"),
               shiny::verbatimTextOutput("quollr_model_summary")
             )
           )

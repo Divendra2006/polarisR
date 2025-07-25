@@ -1023,26 +1023,57 @@ nldr_viz_server <- function(input, output, session) {
         p <- ggplot2::ggplot() +
           ggplot2::annotate("text", x = 0.5, y = 0.5,
                             label = "No valid prediction data available") +
-          ggplot2::theme_minimal()
+          ggplot2::theme_void()
       } else {
         p <- ggplot2::ggplot(plot_data) +
           ggplot2::geom_point(ggplot2::aes(x = Original_X, y = Original_Y, color = Residual),
-                              size = 2, alpha = 0.7) +
+                              size = 2.5, alpha = 0.75) +
           ggplot2::scale_color_viridis_c(name = "Prediction\nError") +
           ggplot2::labs(
             title = "Model Fit Quality",
             x = "Original 2D Embedding Dimension 1",
             y = "Original 2D Embedding Dimension 2"
           ) +
-          ggplot2::theme_minimal()
+          ggplot2::coord_fixed(ratio = 1) + 
+          ggplot2::theme_minimal() +
+          ggplot2::theme(
+            plot.title = ggplot2::element_text(size = 16, hjust = 0.5, margin = ggplot2::margin(b = 20)),
+            axis.text = ggplot2::element_text(size = 11),
+            axis.title = ggplot2::element_text(size = 13),
+            axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 15)),
+            axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 15)),
+            legend.position = "right",
+            panel.grid.minor = ggplot2::element_blank()
+          )
       }
-      plotly::ggplotly(p)
+
+      overall_range <- range(c(plot_data$Original_X, plot_data$Original_Y), na.rm = TRUE)
+      axis_padding <- diff(overall_range) * 0.05
+      axis_min <- overall_range[1] - axis_padding
+      axis_max <- overall_range[2] + axis_padding
+
+      plotly::ggplotly(p) %>%
+        plotly::layout(
+          margin = list(l = 80, r = 50, t = 80, b = 80),
+          autosize = TRUE,
+          xaxis = list(
+            title = list(standoff = 20),
+            scaleanchor = "y",  
+            scaleratio = 1,     
+            range = c(axis_min, axis_max) 
+          ),
+          yaxis = list(
+            title = list(standoff = 25),
+            range = c(axis_min, axis_max) 
+          )
+        )
 
     }, error = function(e) {
       p <- ggplot2::ggplot() +
         ggplot2::annotate("text", x = 0.5, y = 0.5,
-                          label = paste("Error creating fit plot:", e$message)) +
-        ggplot2::theme_minimal()
+                          label = paste("Error creating fit plot:", e$message),
+                          size = 4, color = "red") +
+        ggplot2::theme_void()
       plotly::ggplotly(p)
     })
   })
@@ -1116,7 +1147,7 @@ nldr_viz_server <- function(input, output, session) {
     show_langevitour_flag(FALSE)
   })
 
-  output$langevitour_output <- shiny::renderUI({
+   output$langevitour_output <- shiny::renderUI({
     shiny::req(show_langevitour_flag(), quollr_results())
     results <- quollr_results()
     tryCatch({
