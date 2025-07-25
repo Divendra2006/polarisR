@@ -8,6 +8,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom crosstalk SharedData
 #' @importFrom plotly highlight
+#' @importFrom FNN get.knn
 #' @return A Shiny server function
 #' @keywords internal
 nldr_viz_server <- function(input, output, session) {
@@ -457,7 +458,31 @@ nldr_viz_server <- function(input, output, session) {
       shared_vis_data(),
       input$tour_display_type
     )
+    input$show_edges
     detourr::displayScatter2dOutput("tour_plot_2d", height = "580px")
+  })
+
+  tour_edges <- shiny::reactive({
+    shiny::req(input$show_edges, shared_vis_data())
+
+    data <- shared_vis_data()$data()
+    all_cols <- names(data)
+    projection_cols <- all_cols[!all_cols %in% c("x", "y", "color")]
+
+    # Ensure there is data to process
+    if (nrow(data) < 2 || length(projection_cols) < 1) {
+      return(NULL)
+    }
+
+    # Calculate 5-nearest neighbors using the high-dimensional data
+    knn <- FNN::get.knn(data[, projection_cols, drop = FALSE], k = 5)
+
+    # Format the k-NN results into an edge list (from-to matrix)
+    from <- rep(1:nrow(data), 5)
+    to <- as.vector(t(knn$nn.index))
+    edges <- cbind(from, to)
+
+    return(edges)
   })
 
   tour_object <- shiny::reactive({
@@ -465,6 +490,7 @@ nldr_viz_server <- function(input, output, session) {
       shared_vis_data(),
       input$tour_display_type,
       !is.null(input$tour_axes),
+      !is.null(input$show_edges),
       color_palette()
     )
 
@@ -472,6 +498,12 @@ nldr_viz_server <- function(input, output, session) {
     pal <- color_palette()
     all_cols <- names(sd_obj$data())
     projection_cols <- all_cols[!all_cols %in% c("x", "y", "color")]
+
+    current_edges <- if (isTRUE(input$show_edges)) {
+      tour_edges()
+    } else {
+      NULL
+    }
 
     if (length(projection_cols) < 2) {
       shiny::showNotification(
@@ -495,15 +527,15 @@ nldr_viz_server <- function(input, output, session) {
       input$tour_display_type,
       "Scatter" = {
         shiny::req(input$tour_alpha)
-        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1)
+        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1, edges = current_edges)
       },
       "Sage" = {
         shiny::req(input$tour_gamma)
-        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1)
+        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1, edges = current_edges)
       },
       "Slice" = {
         shiny::req(input$tour_slice_volume)
-        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1)
+        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1, edges = current_edges)
       }
     )
   })
@@ -1034,7 +1066,7 @@ nldr_viz_server <- function(input, output, session) {
             x = "Original 2D Embedding Dimension 1",
             y = "Original 2D Embedding Dimension 2"
           ) +
-          ggplot2::coord_fixed(ratio = 1) + 
+          ggplot2::coord_fixed(ratio = 1) +
           ggplot2::theme_minimal() +
           ggplot2::theme(
             plot.title = ggplot2::element_text(size = 16, hjust = 0.5, margin = ggplot2::margin(b = 20)),
@@ -1058,13 +1090,13 @@ nldr_viz_server <- function(input, output, session) {
           autosize = TRUE,
           xaxis = list(
             title = list(standoff = 20),
-            scaleanchor = "y",  
-            scaleratio = 1,     
-            range = c(axis_min, axis_max) 
+            scaleanchor = "y",
+            scaleratio = 1,
+            range = c(axis_min, axis_max)
           ),
           yaxis = list(
             title = list(standoff = 25),
-            range = c(axis_min, axis_max) 
+            range = c(axis_min, axis_max)
           )
         )
 

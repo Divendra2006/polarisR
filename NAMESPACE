@@ -2,6 +2,7 @@
 
 export(run_nldr_viz)
 import(shiny)
+importFrom(FNN,get.knn)
 importFrom(bslib,card)
 importFrom(bslib,card_body)
 importFrom(bslib,card_header)

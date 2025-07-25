@@ -133,6 +133,7 @@ nldr_viz_ui <- function() {
                                 choices = c("Scatter", "Sage", "Slice"), inline = TRUE),
             shiny::hr(),
             shiny::checkboxInput("tour_axes", "Show Axes", value = FALSE),
+            shiny::checkboxInput("show_edges", "Show Edges (5-NN Graph)", value = FALSE),
             shiny::hr(),
             shiny::conditionalPanel(
               condition = "input.tour_display_type == 'Scatter'",
