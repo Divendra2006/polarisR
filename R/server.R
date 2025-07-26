@@ -23,6 +23,7 @@ nldr_viz_server <- function(input, output, session) {
   show_langevitour_flag <- shiny::reactiveVal(FALSE)
   binwidth_optimization_results <- shiny::reactiveVal(NULL)
   optimal_config <- shiny::reactiveVal(NULL)
+  current_dataset_name <- shiny::reactiveVal("Unknown")
 
   nldr_datasets <- shiny::reactiveVal(list())
   shared_vis_data <- shiny::reactiveVal(NULL)
@@ -90,6 +91,7 @@ nldr_viz_server <- function(input, output, session) {
   shiny::observeEvent(input$example_data, {
     shiny::req(input$example_data != "None")
     custom_data_list <- custom_datasets()
+    current_dataset_name(input$example_data)
     data <- custom_data_list[[input$example_data]]
     dataset(data)
     apply_changes_clicked(FALSE)
@@ -143,6 +145,8 @@ nldr_viz_server <- function(input, output, session) {
         footer = shiny::modalButton("OK")
       ))
     })
+    dataset_name <- tools::file_path_sans_ext(file$name)
+    current_dataset_name(dataset_name)
   })
 
   output$column_selection <- shiny::renderUI({
@@ -327,10 +331,11 @@ nldr_viz_server <- function(input, output, session) {
 
       id <- nldr_counter() + 1
       nldr_counter(id)
+      dataset_name <- current_dataset_name()
       method_settings <- if(input$nldr_method == "t-SNE") {
-        paste0("t-SNE (p=", result$perplexity, ", iter=", result$max_iter, ")")
+        paste0(dataset_name, " - t-SNE (p=", result$perplexity, ", iter=", result$max_iter, ")")
       } else {
-        paste0("UMAP (n=", result$n_neighbors, ", dist=", result$min_dist, ")")
+        paste0(dataset_name, " - UMAP (n=", result$n_neighbors, ", dist=", result$min_dist, ")")
       }
       current <- nldr_datasets()
       current[[as.character(id)]] <- list(
@@ -464,24 +469,16 @@ nldr_viz_server <- function(input, output, session) {
 
   tour_edges <- shiny::reactive({
     shiny::req(input$show_edges, shared_vis_data())
-
     data <- shared_vis_data()$data()
     all_cols <- names(data)
     projection_cols <- all_cols[!all_cols %in% c("x", "y", "color")]
-
-    # Ensure there is data to process
     if (nrow(data) < 2 || length(projection_cols) < 1) {
       return(NULL)
     }
-
-    # Calculate 5-nearest neighbors using the high-dimensional data
     knn <- FNN::get.knn(data[, projection_cols, drop = FALSE], k = 5)
-
-    # Format the k-NN results into an edge list (from-to matrix)
     from <- rep(1:nrow(data), 5)
     to <- as.vector(t(knn$nn.index))
     edges <- cbind(from, to)
-
     return(edges)
   })
 
