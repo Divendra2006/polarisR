@@ -24,11 +24,17 @@ nldr_viz_server <- function(input, output, session) {
   binwidth_optimization_results <- shiny::reactiveVal(NULL)
   optimal_config <- shiny::reactiveVal(NULL)
   current_dataset_name <- shiny::reactiveVal("Unknown")
-
+  comparison_selected_datasets <- shiny::reactiveVal(character(0))
+  comparison_results <- shiny::reactiveVal(NULL)
   nldr_datasets <- shiny::reactiveVal(list())
   shared_vis_data <- shiny::reactiveVal(NULL)
   color_palette <- shiny::reactiveVal(NULL)
   nldr_counter <- shiny::reactiveVal(0)
+
+  extract_base_dataset_name <- function(full_name) {
+    base_name <- gsub("\\s*-\\s*(t-SNE|UMAP).*$", "", full_name)
+    return(trimws(base_name))
+  }
 
   visualization_config <- shiny::reactive({
     list(
@@ -56,30 +62,24 @@ nldr_viz_server <- function(input, output, session) {
 
   validate_quollr_data <- function(vis_data) {
     issues <- character(0)
-
     if (nrow(vis_data) < 10) {
       issues <- c(issues, "Dataset too small (need at least 10 points)")
     }
-
     required_cols <- c("x", "y")
     missing_cols <- setdiff(required_cols, names(vis_data))
     if (length(missing_cols) > 0) {
       issues <- c(issues, paste("Missing required columns:", paste(missing_cols, collapse = ", ")))
     }
-
     numeric_cols <- sapply(vis_data, is.numeric)
     excluded_cols <- c("x", "y", "color")
     available_cols <- names(vis_data)[numeric_cols]
     highd_cols <- setdiff(available_cols, excluded_cols)
-
     if (length(highd_cols) < 2) {
       issues <- c(issues, "Need at least 2 high-dimensional numeric columns")
     }
-
     if (any(is.na(vis_data$x)) || any(is.na(vis_data$y))) {
       issues <- c(issues, "Missing values found in x or y coordinates")
     }
-
     return(issues)
   }
 
@@ -192,7 +192,7 @@ nldr_viz_server <- function(input, output, session) {
   shiny::observeEvent(c(input$auto_perplexity, dataset()), {
     shiny::req(dataset())
     data <- dataset()
-    if (input$auto_perplexity) {
+    if (isTRUE(input$auto_perplexity)) {
       perplexity_value <- min(30, floor(nrow(data) / 3) - 1)
       perplexity_value <- max(5, perplexity_value)
       shiny::updateSliderInput(session, "perplexity", value = perplexity_value)
@@ -200,7 +200,7 @@ nldr_viz_server <- function(input, output, session) {
   });
 
   shiny::observeEvent(input$perplexity, {
-    if (input$auto_perplexity) {
+    if (isTRUE(input$auto_perplexity)) {
       shiny::updateCheckboxInput(session, "auto_perplexity", value = FALSE)
     }
   }, ignoreInit = TRUE)
@@ -273,7 +273,7 @@ nldr_viz_server <- function(input, output, session) {
         input$color_column
       }
       perplexity_value <- input$perplexity
-      if (input$auto_perplexity && input$nldr_method == "t-SNE") {
+      if (isTRUE(input$auto_perplexity) && input$nldr_method == "t-SNE") {
         perplexity_value <- min(30, floor(nrow(data) / 3) - 1)
         perplexity_value <- max(5, perplexity_value)
       }
@@ -678,7 +678,7 @@ nldr_viz_server <- function(input, output, session) {
   shiny::observeEvent(c(input$auto_bin_range, shared_vis_data()), {
     shiny::req(shared_vis_data())
 
-    if (input$auto_bin_range) {
+    if (isTRUE(input$auto_bin_range)) {
       data <- shared_vis_data()$data()
       n_points <- nrow(data)
 
@@ -700,7 +700,7 @@ nldr_viz_server <- function(input, output, session) {
   })
 
   shiny::observeEvent(c(input$min_bins, input$max_bins), {
-    if (input$auto_bin_range && !is.null(input$min_bins)) {
+    if (isTRUE(input$auto_bin_range) && !is.null(input$min_bins)) {
       shiny::updateCheckboxInput(session, "auto_bin_range", value = FALSE)
     }
   }, ignoreInit = TRUE)
@@ -1176,7 +1176,7 @@ nldr_viz_server <- function(input, output, session) {
     show_langevitour_flag(FALSE)
   })
 
-   output$langevitour_output <- shiny::renderUI({
+  output$langevitour_output <- shiny::renderUI({
     shiny::req(show_langevitour_flag(), quollr_results())
     results <- quollr_results()
     tryCatch({
@@ -1221,5 +1221,268 @@ nldr_viz_server <- function(input, output, session) {
         )
       )
     })
+  })
+
+  output$comparison_dataset_selection <- shiny::renderUI({
+    datasets <- nldr_datasets()
+    if (length(datasets) == 0) {
+      return(
+        shiny::div(
+          class = "text-center text-muted p-3",
+          shiny::icon("database", class = "fa-2x mb-2"),
+          shiny::p("No stored NLDR datasets available for comparison.", class = "mb-0")
+        )
+      )
+    }
+
+    dataset_names <- sapply(datasets, function(ds) ds$name)
+    base_names <- sapply(dataset_names, extract_base_dataset_name)
+    grouped_choices <- split(names(datasets), base_names)
+    shiny::div(
+      class = "dataset-selection-container",
+      style = "max-height: 300px; overflow-y: auto;",
+      lapply(names(grouped_choices), function(base_name) {
+        group_datasets <- grouped_choices[[base_name]]
+        shiny::div(
+          class = "dataset-group mb-3",
+          shiny::h6(base_name, class = "text-primary mb-2"),
+          lapply(group_datasets, function(ds_id) {
+            ds <- datasets[[ds_id]]
+            shiny::div(
+              class = "form-check mb-1",
+              shiny::checkboxInput(
+                inputId = paste0("comp_select_", ds_id),
+                label = ds$name,
+                value = ds_id %in% comparison_selected_datasets()
+              )
+            )
+          })
+        )
+      })
+    )
+  })
+
+  shiny::observe({
+    datasets <- nldr_datasets()
+    if (length(datasets) == 0) return()
+    selected <- character(0)
+    for (ds_id in names(datasets)) {
+      input_id <- paste0("comp_select_", ds_id)
+      if (!is.null(input[[input_id]]) && input[[input_id]]) {
+        selected <- c(selected, ds_id)
+      }
+    }
+    comparison_selected_datasets(selected)
+  })
+
+  shiny::observeEvent(input$clear_comparison_selection, {
+    comparison_selected_datasets(character(0))
+    datasets <- nldr_datasets()
+    for (ds_id in names(datasets)) {
+      input_id <- paste0("comp_select_", ds_id)
+      shiny::updateCheckboxInput(session, input_id, value = FALSE)
+    }
+    shiny::showNotification("Selection cleared", type = "message", duration = 1.5)
+  })
+
+  shiny::observeEvent(input$run_comparison_analysis, {
+    selected <- comparison_selected_datasets()
+    if (length(selected) < 2) {
+      shiny::showModal(shiny::modalDialog(
+        title = "Insufficient Selection",
+        "Please select at least 2 datasets for comparison.",
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+      return()
+    }
+    tryCatch({
+      shiny::withProgress(message = 'Running comparison analysis...', {
+        datasets <- nldr_datasets()
+        all_results <- data.frame()
+        first_ds_data <- datasets[[selected[1]]]$tour_input_data
+        n_points <- nrow(first_ds_data)
+        min_bins <- max(3, floor(sqrt(n_points / 100)))
+        max_bins <- min(25, floor(sqrt(n_points / 5)))
+        if (max_bins <= min_bins) {
+          max_bins <- min_bins + 5
+        }
+        bin_x_vec <- seq(min_bins, max_bins, by = 1)
+        total_iterations <- length(selected) * length(bin_x_vec)
+        progress_count <- 0
+        for (ds_id in selected) {
+          ds <- datasets[[ds_id]]
+          vis_data <- ds$tour_input_data
+          vis_result <- ds$result
+          numeric_cols <- sapply(vis_data, is.numeric)
+          excluded_cols <- c("x", "y", "color")
+          available_cols <- names(vis_data)[numeric_cols]
+          highd_cols <- setdiff(available_cols, excluded_cols)
+          training_data <- vis_data[, highd_cols, drop = FALSE]
+          new_col_names <- paste0("x", seq_along(highd_cols))
+          names(training_data) <- new_col_names
+          training_data$ID <- seq_len(nrow(training_data))
+          embedding_data <- data.frame(
+            EMBEDDING1 = vis_data$x,
+            EMBEDDING2 = vis_data$y,
+            ID = seq_len(nrow(vis_data))
+          )
+          x_range <- range(embedding_data$EMBEDDING1, na.rm = TRUE)
+          y_range <- range(embedding_data$EMBEDDING2, na.rm = TRUE)
+          x_span <- diff(x_range)
+          y_span <- diff(y_range)
+          embedding_scaled <- data.frame(
+            EMBEDDING1 = (embedding_data$EMBEDDING1 - x_range[1]) / x_span,
+            EMBEDDING2 = (embedding_data$EMBEDDING2 - y_range[1]) / y_span,
+            ID = embedding_data$ID
+          )
+          for (bin_x in bin_x_vec) {
+            progress_count <- progress_count + 1
+            shiny::incProgress(1/total_iterations,
+                               detail = paste("Dataset", which(selected == ds_id), "of", length(selected),
+                                              "- Testing", bin_x, "x", bin_x, "bins"))
+            tryCatch({
+              model_result <- quollr::fit_highd_model(
+                training_data = training_data,
+                nldr_df_with_id = embedding_scaled,
+                x = "EMBEDDING1",
+                y = "EMBEDDING2",
+                num_bins_x = bin_x,
+                num_bins_y = bin_x,
+                is_rm_lwd_hex = FALSE,
+                col_start_2d = "EMBEDDING",
+                col_start_highd = "x"
+              )
+
+              pred_result <- quollr::predict_emb(
+                test_data = training_data,
+                df_bin_centroids = model_result$df_bin_centroids,
+                df_bin = model_result$df_bin,
+                type_NLDR = vis_result$method
+              )
+
+              pred_df <- as.data.frame(do.call(cbind, pred_result))
+              evaluation <- quollr::gen_summary(
+                test_data = training_data,
+                prediction_df = pred_df,
+                df_bin = model_result$df_bin,
+                col_start = "x"
+              )
+
+              result_row <- data.frame(
+                dataset_id = ds_id,
+                dataset_name = ds$name,
+                method = vis_result$method,
+                base_dataset = extract_base_dataset_name(ds$name),
+                bin_x = bin_x,
+                bin_y = bin_x,
+                total_bins = bin_x * bin_x,
+                non_empty_bins = nrow(model_result$df_bin_centroids),
+                MSE = evaluation$mse,
+                AIC = evaluation$aic,
+                binwidth_x = 1/bin_x,
+                binwidth_y = 1/bin_x,
+                perplexity = if (vis_result$method == "t-SNE") vis_result$perplexity else NA,
+                max_iter = if (vis_result$method == "t-SNE") vis_result$max_iter else NA,
+                n_neighbors = if (vis_result$method == "UMAP") vis_result$n_neighbors else NA,
+                min_dist = if (vis_result$method == "UMAP") vis_result$min_dist else NA,
+                stringsAsFactors = FALSE
+              )
+
+              all_results <- rbind(all_results, result_row)
+
+            }, error = function(e) {
+              cat("Skipping configuration for dataset", ds_id, "bins", bin_x, "- Error:", e$message, "\n")
+            })
+          }
+        }
+        if (nrow(all_results) == 0) {
+          stop("No valid results obtained from any dataset")
+        }
+        comparison_results(all_results)
+        shiny::showNotification(
+          paste("Comparison analysis completed for", length(selected), "datasets!"),
+          type = "message", duration = 3
+        )
+      })
+
+    }, error = function(e) {
+        shiny::showModal(shiny::modalDialog(
+        title = "Comparison Analysis Error",
+        paste("Error during comparison analysis:", e$message),
+        easyClose = TRUE,
+        footer = shiny::modalButton("OK")
+      ))
+    })
+  })
+
+  output$comparison_mse_plot <- plotly::renderPlotly({
+    shiny::req(comparison_results())
+    results <- comparison_results()
+    p <- ggplot2::ggplot(results, ggplot2::aes(x = binwidth_x, y = MSE, color = method, linetype = dataset_name)) +
+      ggplot2::geom_line(linewidth = 0.3) +
+      ggplot2::geom_point(size = 0.8) +
+      ggplot2::scale_color_manual(values = c("t-SNE" = "#2E86AB", "UMAP" = "#A23B72")) +
+      ggplot2::labs(
+        title = NULL,
+        y = "MSE",
+        x = "Binwidth (1/bins_x)",
+        color = "Method",
+        linetype = "Dataset"
+      ) +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(
+        panel.border = ggplot2::element_rect(fill = 'transparent', color = "grey80"),
+        axis.ticks = ggplot2::element_line(),
+        legend.position = "none",
+        axis.text = ggplot2::element_text(size = 10),
+        axis.title = ggplot2::element_text(size = 12),
+        plot.title = ggplot2::element_text(size = 14, hjust = 0.5),
+      )
+
+    optimal_points <- results %>%
+      dplyr::group_by(dataset_name, method) %>%
+      dplyr::slice_min(MSE, n = 1, with_ties = FALSE) %>%
+      dplyr::ungroup()
+
+    if (nrow(optimal_points) > 0) {
+      p <- p + ggplot2::geom_point(
+        data = optimal_points,
+        size = 3,
+        shape = 21,
+        fill = "red",
+        color = "red",
+        alpha = 0.8
+      )
+    }
+
+    plotly_obj <- plotly::ggplotly(p, tooltip = c("x", "y", "colour", "linetype"))
+    plotly::layout(plotly_obj,
+                   margin = list(l = 50, r = 50, t = 50, b = 50)
+      )
+  })
+
+  output$best_configuration_summary <- shiny::renderPrint({
+    shiny::req(comparison_results())
+    results <- comparison_results()
+    if (nrow(results) == 0) {
+      return("No comparison data available to determine the best configuration.")
+    }
+    overall_best <- results[which.min(results$MSE), ]
+    cat("🏆 Best Configuration Found\n")
+    cat("--------------------------\n")
+    cat("Name:", overall_best$dataset_name, "\n\n")
+    cat("--- NLDR Details ---\n")
+    cat("Method:", overall_best$method, "\n")
+    if (overall_best$method == "t-SNE") {
+      cat("Perplexity:", overall_best$perplexity, "\n")
+      cat("Max Iterations:", overall_best$max_iter, "\n")
+    } else {
+      cat("Num. Neighbors:", overall_best$n_neighbors, "\n")
+      cat("Min. Distance:", overall_best$min_dist, "\n")
+    }
+    cat("\n--- Quollr Diagnostics ---\n")
+    cat("Optimal Bins:", paste0(overall_best$bin_x, " x ", overall_best$bin_y), "\n")
+    cat("Resulting MSE:", round(overall_best$MSE, 5), "\n")
   })
 }

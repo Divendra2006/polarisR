@@ -120,7 +120,6 @@ nldr_viz_ui <- function() {
 
     bslib::nav_spacer(),
 
-    # Dynamic Tour Tab
     bslib::nav_panel(
       title = "Dynamic Tour",
       bslib::layout_sidebar(
@@ -228,13 +227,13 @@ nldr_viz_ui <- function() {
                          shiny::tabsetPanel(
                            shiny::tabPanel("MSE vs Binwidth",
                                            shiny::div(class = "my-5",
-                                           plotly::plotlyOutput("binwidth_mse_plot", height = "500px"))),
+                                                      plotly::plotlyOutput("binwidth_mse_plot", height = "500px"))),
                            shiny::tabPanel("Optimization Table",
                                            shiny::div(class = "my-5",
-                                           DT::DTOutput("binwidth_results_table"))),
+                                                      DT::DTOutput("binwidth_results_table"))),
                            shiny::tabPanel("Model Fit",
                                            shiny::div(class = "my-5",
-                                           plotly::plotlyOutput("quollr_fit_plot", height = "500px"))),
+                                                      plotly::plotlyOutput("quollr_fit_plot", height = "500px"))),
                            shiny::tabPanel("High-Dimensional Model Tour",
                                            shiny::div(
                                              style = "margin-top: 1rem;",
@@ -277,6 +276,48 @@ nldr_viz_ui <- function() {
               shiny::hr(style = "margin: 20px 0; border-color: #dee2e6;"),
               shiny::h6("Model Evaluation", style = "margin-bottom: 10px; color: #495057;"),
               shiny::verbatimTextOutput("quollr_model_summary")
+            )
+          )
+        )
+      )
+    ),
+    bslib::nav_spacer(),
+
+    bslib::nav_panel(
+      title = "Method Comparison",
+      bslib::layout_sidebar(
+        sidebar = bslib::sidebar(
+          width = 300,
+          gap = "1rem",
+
+          bslib::card(
+            bslib::card_header("Dataset Selection for Comparison"),
+            shiny::helpText("Select multiple NLDR results from the same dataset to compare methods and settings.",
+                            class = "text-muted mb-3"),
+            shiny::uiOutput("comparison_dataset_selection"),
+            shiny::hr(),
+            shiny::actionButton("run_comparison_analysis", "Run Comparison Analysis",
+                                class = "btn-primary w-100"),
+            shiny::hr(),
+            shiny::actionButton("clear_comparison_selection", "Clear Selection",
+                                class = "btn-warning")
+          ),
+        ),
+
+        bslib::layout_columns(
+          col_widths = c(8, 4),
+          gap = "20px",
+          bslib::card(
+            bslib::card_header("MSE Comparison Plot"),
+            bslib::card_body(
+              plotly::plotlyOutput("comparison_mse_plot", height = "550px")
+            )
+          ),
+          bslib::card(
+            bslib::card_header("Best Configuration Summary"),
+            bslib::card_body(
+              style = "padding-top: 1.25rem;",
+              shiny::verbatimTextOutput("best_configuration_summary")
             )
           )
         )
