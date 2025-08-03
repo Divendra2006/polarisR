@@ -10,15 +10,24 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    shiny,
     bslib,
-    DT,
+    crosstalk,
+    detourr,
     dplyr,
+    DT,
+    FNN,
     ggplot2,
-    Rtsne,
-    umap,
+    magrittr,
     plotly,
-    jsonlite
+    quollr,
+    Rtsne,
+    scales,
+    shiny,
+    testthat,
+    tools,
+    umap,
+    promises,
+    future
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
