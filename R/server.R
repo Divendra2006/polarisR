@@ -771,16 +771,71 @@ nldr_viz_server <- function(input, output, session) {
 
     plot_data <- model_results$nldr_obj$scaled_nldr %>%
       dplyr::left_join(pred_data, by = "ID") %>%
-      dplyr::mutate(Residual = sqrt((emb1 - pred_emb_1)^2 + (emb2 - pred_emb_2)^2))
+      dplyr::mutate(
+        Residual = sqrt((emb1 - pred_emb_1)^2 + (emb2 - pred_emb_2)^2),
+       Error_Level = cut(
+          Residual, 
+          breaks = quantile(Residual, probs = c(0, 0.33, 0.67, 1), na.rm = TRUE),
+          labels = c("Low Error", "Medium Error", "High Error"),
+          include.lowest = TRUE
+        ),
+        tooltip_text = paste(
+          "Embedding 1:", round(emb1, 3), "<br>",
+          "Embedding 2:", round(emb2, 3), "<br>",
+          "Prediction Error:", round(Residual, 4), "<br>",
+          "Error Level:", Error_Level
+        )
+      )
 
-    p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = emb1, y = emb2, color = Residual)) +
-      ggplot2::geom_point(alpha = 0.7) +
-      ggplot2::scale_color_viridis_c() +
-      ggplot2::coord_fixed() +
-      ggplot2::labs(title = "Model Fit Quality (Prediction Error)", x = "Embedding Dim 1", y = "Embedding Dim 2") +
-      ggplot2::theme_minimal()
+    p <- ggplot2::ggplot(plot_data, ggplot2::aes(
+      x = emb1, 
+      y = emb2, 
+      color = Error_Level,
+      text = tooltip_text
+    )) +
+      ggplot2::geom_point(
+        size = 2.2, 
+        alpha = 0.8,
+        stroke = 0
+      ) +
+      ggplot2::scale_color_manual(
+        values = c(
+          "Low Error" = "#66B2CC",    
+          "Medium Error" = "#FFDD88", 
+          "High Error" = "#FF7755"    
+        ),
+        name = "Model Fit Quality",
+        guide = ggplot2::guide_legend(
+          title.position = "top",
+          title.hjust = 0.5,
+          override.aes = list(size = 4, alpha = 1)
+        )
+      ) +
+      ggplot2::coord_fixed(ratio = 1) +
+      ggplot2::labs(
+        title = "Model Fit Quality: Prediction Error Distribution",
+        subtitle = "Blue: Good fit | Orange: Medium fit | Red: Poor fit",
+        x = "Embedding Dimension 1",
+        y = "Embedding Dimension 2"
+      ) +
+      ggplot2::theme_minimal(base_size = 12) +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(size = 14, face = "bold", hjust = 0.5),
+        plot.subtitle = ggplot2::element_text(size = 11, hjust = 0.5, color = "gray40"),
+        legend.position = "right",
+        legend.title = ggplot2::element_text(size = 11, face = "bold"),
+        legend.text = ggplot2::element_text(size = 10),
+        panel.grid.minor = ggplot2::element_blank(),
+        panel.background = ggplot2::element_rect(fill = "white", color = NA),
+        plot.background = ggplot2::element_rect(fill = "white", color = NA)
+      )
 
-    plotly::ggplotly(p)
+    plotly::ggplotly(p, tooltip = "text") %>%
+      plotly::layout(
+        showlegend = TRUE,
+        margin = list(l = 50, r = 100, t = 80, b = 50)
+      ) %>%
+      plotly::config(displayModeBar = TRUE, displaylogo = FALSE)
   })
 
   shiny::observeEvent(input$show_langevitour, {
