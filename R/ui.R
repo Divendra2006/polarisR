@@ -9,6 +9,22 @@ nldr_viz_ui <- function() {
   bslib::page_navbar(
     title = "NLDR Visualization Tool",
     theme = bslib::bs_theme(bootswatch = "lumen"),
+
+    shiny::tags$head(
+      shiny::tags$style(shiny::HTML("
+        .btn.disabled {
+          pointer-events: none;
+          opacity: 0.6;
+        }
+        .fa-spin {
+          animation: fa-spin 2s infinite linear;
+        }
+        @keyframes fa-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      "))
+    ),
     bslib::nav_spacer(),
     bslib::nav_panel(
       title = "Dataset Preview",
@@ -95,7 +111,20 @@ nldr_viz_ui <- function() {
             bslib::card_header("Reproducibility Options"),
             shiny::numericInput("seed", "Random Seed:", value = 123, min = 1, max = 99999)
           ),
-          shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success")
+          shiny::div(
+            shiny::conditionalPanel(
+              condition = "!output.visualization_button_disabled",
+              shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success w-100")
+            ),
+            shiny::conditionalPanel(
+              condition = "output.visualization_button_disabled",
+              shiny::div(
+                class = "btn btn-success disabled w-100",
+                shiny::icon("spinner", class = "fa-spin"),
+                " Processing..."
+              )
+            )
+          )
         ),
         bslib::layout_columns(
           col_widths = c(8, 4),
@@ -180,15 +209,41 @@ nldr_viz_ui <- function() {
             bslib::card_header("Binwidth Optimization"),
             shiny::helpText("Click the button to automatically test a range of bin widths and find the optimal configuration based on RMSE."),
             shiny::hr(),
-            shiny::actionButton("run_binwidth_optimization", "Optimize Binwidth", class = "btn-info w-100")
+            shiny::div(
+              shiny::conditionalPanel(
+                condition = "!output.binwidth_button_disabled",
+                shiny::actionButton("run_binwidth_optimization", "Optimize Binwidth", class = "btn-info w-100")
+              ),
+              shiny::conditionalPanel(
+                condition = "output.binwidth_button_disabled",
+                shiny::div(
+                  class = "btn btn-info disabled w-100",
+                  shiny::icon("spinner", class = "fa-spin"),
+                  " Optimizing..."
+                )
+              )
+            )
           ),
           bslib::card(
             bslib::card_header("Analysis Actions"),
             shiny::helpText("Note: Run binwidth optimization first to automatically configure optimal bins", class = "mb-3"),
             shiny::div(
               class = "d-grid gap-2",
-              shiny::actionButton("run_quollr_analysis", "Run Quollr Analysis", class = "btn-success"),
-              shiny::actionButton("show_langevitour", "Show 3D Tour", class = "btn-secondary")
+              shiny::div(
+                shiny::conditionalPanel(
+                  condition = "!output.quollr_button_disabled",
+                  shiny::actionButton("run_quollr_analysis", "Run Quollr Analysis", class = "btn-success w-100")
+                ),
+                shiny::conditionalPanel(
+                  condition = "output.quollr_button_disabled",
+                  shiny::div(
+                    class = "btn btn-success disabled w-100",
+                    shiny::icon("spinner", class = "fa-spin"),
+                    " Analyzing..."
+                  )
+                )
+              ),
+              shiny::actionButton("show_langevitour", "Show 3D Tour", class = "btn-secondary w-100")
             )
           )
         ),
@@ -202,7 +257,7 @@ nldr_viz_ui <- function() {
                 style = "padding-top: 30px;",
                 shiny::tabsetPanel(
                   shiny::tabPanel(
-                    "MSE vs Binwidth",
+                    "RMSE vs Binwidth",
                     shiny::div(
                       class = "my-5",
                       plotly::plotlyOutput("binwidth_mse_plot", height = "500px")
@@ -272,19 +327,32 @@ nldr_viz_ui <- function() {
             ),
             shiny::uiOutput("comparison_dataset_selection"),
             shiny::hr(),
-            shiny::actionButton("run_comparison_analysis", "Generate Comparison Plot",
-              class = "btn-primary w-100"
+            shiny::div(
+              shiny::conditionalPanel(
+                condition = "!output.comparison_button_disabled",
+                shiny::actionButton("run_comparison_analysis", "Generate Comparison Plot",
+                  class = "btn-primary w-100"
+                )
+              ),
+              shiny::conditionalPanel(
+                condition = "output.comparison_button_disabled",
+                shiny::div(
+                  class = "btn btn-primary disabled w-100",
+                  shiny::icon("spinner", class = "fa-spin"),
+                  " Comparing..."
+                )
+              )
             ),
             shiny::actionButton("clear_comparison_selection", "Clear Selection",
               class = "btn-warning w-100 mt-2"
-            ) 
+            )
           ),
         ),
         bslib::layout_columns(
           col_widths = c(8, 4),
           gap = "20px",
           bslib::card(
-            bslib::card_header("MSE Comparison Plot"),
+            bslib::card_header("RMSE Comparison Plot"),
             bslib::card_body(
               plotly::plotlyOutput("comparison_mse_plot", height = "550px")
             )

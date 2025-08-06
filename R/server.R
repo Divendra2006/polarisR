@@ -12,6 +12,16 @@
 #' @return A Shiny server function
 #' @keywords internal
 nldr_viz_server <- function(input, output, session) {
+  if (!future::supportsMulticore()) {
+    future::plan(future::multisession, workers = 2)
+  } else {
+    future::plan(future::multicore, workers = 2)
+  }
+
+  session$onSessionEnded(function() {
+    future::plan(future::sequential)
+  })
+
   dataset <- shiny::reactiveVal(NULL)
   vis_results <- shiny::reactiveVal(NULL)
   apply_changes_clicked <- shiny::reactiveVal(FALSE)
@@ -21,6 +31,10 @@ nldr_viz_server <- function(input, output, session) {
   quollr_model <- shiny::reactiveVal(NULL)
   quollr_results <- shiny::reactiveVal(NULL)
   show_langevitour_flag <- shiny::reactiveVal(FALSE)
+  is_running_visualization <- shiny::reactiveVal(FALSE)
+  is_running_binwidth_optimization <- shiny::reactiveVal(FALSE)
+  is_running_quollr_analysis <- shiny::reactiveVal(FALSE)
+  is_running_comparison <- shiny::reactiveVal(FALSE)
   binwidth_optimization_results <- shiny::reactiveVal(list())
   optimal_config <- shiny::reactiveVal(NULL)
   current_dataset_name <- shiny::reactiveVal("Unknown")
@@ -31,6 +45,26 @@ nldr_viz_server <- function(input, output, session) {
   color_palette <- shiny::reactiveVal(NULL)
   nldr_counter <- shiny::reactiveVal(0)
   active_nldr_id <- shiny::reactiveVal(NULL)
+
+  output$visualization_button_disabled <- shiny::reactive({
+    is_running_visualization()
+  })
+  shiny::outputOptions(output, "visualization_button_disabled", suspendWhenHidden = FALSE)
+
+  output$binwidth_button_disabled <- shiny::reactive({
+    is_running_binwidth_optimization()
+  })
+  shiny::outputOptions(output, "binwidth_button_disabled", suspendWhenHidden = FALSE)
+
+  output$quollr_button_disabled <- shiny::reactive({
+    is_running_quollr_analysis()
+  })
+  shiny::outputOptions(output, "quollr_button_disabled", suspendWhenHidden = FALSE)
+
+  output$comparison_button_disabled <- shiny::reactive({
+    is_running_comparison()
+  })
+  shiny::outputOptions(output, "comparison_button_disabled", suspendWhenHidden = FALSE)
 
   extract_base_dataset_name <- function(full_name) {
     base_name <- gsub("\\s*-\\s*(t-SNE|UMAP).*$", "", full_name)
@@ -217,17 +251,24 @@ nldr_viz_server <- function(input, output, session) {
   shiny::observeEvent(input$run_visualization, {
     shiny::req(dataset())
     data <- dataset()
+
+    # Prevent multiple clicks
+    if (is_running_visualization()) return()
+    is_running_visualization(TRUE)
+
     tryCatch(
       {
         empty_check <- check_empty_cells(data)
         if (empty_check$has_empty) {
           shiny::showModal(shiny::modalDialog(title = "Cannot Run", "The dataset contains empty cells."))
+          is_running_visualization(FALSE)
           return()
         }
 
         numeric_cols_idx <- sapply(data, is.numeric)
         if (sum(numeric_cols_idx) < 2) {
           shiny::showNotification("Need at least 2 numeric columns for NLDR", type = "error")
+          is_running_visualization(FALSE)
           return()
         }
         numeric_data <- data[, numeric_cols_idx, drop = FALSE]
@@ -242,6 +283,7 @@ nldr_viz_server <- function(input, output, session) {
 
         if (ncol(numeric_data) < 2) {
           shiny::showModal(shiny::modalDialog(title = "Not Enough Data", "Fewer than 2 varying numeric columns remain."))
+          is_running_visualization(FALSE)
           return()
         }
 
@@ -268,55 +310,105 @@ nldr_viz_server <- function(input, output, session) {
         set.seed(input$seed)
 
         result <- list(method = input$nldr_method, color_col = color_col, color_values = data[[color_col]], seed = input$seed)
-        if (input$nldr_method == "t-SNE") {
-          shiny::withProgress(message = "Running t-SNE...", {
+        method <- input$nldr_method
+        max_iter_value <- input$max_iter_tsne
+        n_neighbors_value <- input$n_neighbors
+        min_dist_value <- input$min_dist
+        computation_promise <- if (method == "t-SNE") {
+          future::future({
             max_allowed_perplexity <- (nrow(data) - 1) / 3
             if (perplexity_value >= max_allowed_perplexity) {
               perplexity_value <- floor(max_allowed_perplexity)
-              shiny::showNotification(paste("Perplexity too large, using", perplexity_value), type = "warning")
             }
-            tsne_result <- Rtsne::Rtsne(scaled_data, dims = 2, perplexity = perplexity_value, max_iter = input$max_iter_tsne, check_duplicates = FALSE, pca = TRUE, verbose = FALSE)
-            result$coords <- tsne_result$Y
-            result$perplexity <- perplexity_value
-            result$max_iter <- input$max_iter_tsne
-          })
-        } else if (input$nldr_method == "UMAP") {
-          shiny::withProgress(message = "Running UMAP...", {
-            umap_config <- umap::umap.defaults
-            umap_config$n_neighbors <- input$n_neighbors
-            umap_config$min_dist <- input$min_dist
-            umap_result <- umap::umap(scaled_data, config = umap_config)
-            result$coords <- umap_result$layout
-            result$n_neighbors <- input$n_neighbors
-            result$min_dist <- input$min_dist
-          })
-        }
-        vis_results(result)
-        color_as_factor <- as.factor(result$color_values)
-        pal <- scales::hue_pal()(length(levels(color_as_factor)))
-        names(pal) <- levels(color_as_factor)
-        color_palette(pal)
-        plot_data_for_shared <- data.frame(x = result$coords[, 1], y = result$coords[, 2], color = result$color_values)
-        plot_data_for_shared <- cbind(plot_data_for_shared, as.data.frame(scaled_data))
-        shared_vis_data(SharedData$new(plot_data_for_shared, key = ~ row.names(plot_data_for_shared)))
-        id <- nldr_counter() + 1
-        nldr_counter(id)
-        active_nldr_id(as.character(id))
-        method_settings <- if (input$nldr_method == "t-SNE") {
-          paste0(current_dataset_name(), " - t-SNE (p=", result$perplexity, ")")
+            tsne_result <- Rtsne::Rtsne(
+              scaled_data,
+              dims = 2,
+              perplexity = perplexity_value,
+              max_iter = max_iter_value,
+              check_duplicates = FALSE,
+              pca = TRUE,
+              verbose = FALSE
+            )
+            list(
+              coords = tsne_result$Y,
+              perplexity = perplexity_value,
+              max_iter = max_iter_value,
+              method = "t-SNE"
+            )
+          }, seed = TRUE)
         } else {
-          paste0(current_dataset_name(), " - UMAP (n=", result$n_neighbors, ")")
+          future::future({
+            umap_config <- umap::umap.defaults
+            umap_config$n_neighbors <- n_neighbors_value
+            umap_config$min_dist <- min_dist_value
+            umap_result <- umap::umap(scaled_data, config = umap_config)
+            list(
+              coords = umap_result$layout,
+              n_neighbors = n_neighbors_value,
+              min_dist = min_dist_value,
+              method = "UMAP"
+            )
+          }, seed = TRUE)
         }
-        current <- nldr_datasets()
-        current[[as.character(id)]] <- list(id = id, name = method_settings, result = result, tour_input_data = plot_data_for_shared, timestamp = Sys.time())
-        nldr_datasets(current)
+
+        shiny::withProgress(message = paste("Running", method, "visualization..."), value = 0, {
+          shiny::incProgress(0.1, detail = "Validating parameters...")
+          Sys.sleep(0.1)
+          shiny::incProgress(0.1, detail = paste("Computing", method, "embedding..."))
+          progress_steps <- seq(0.2, 0.7, length.out = 10)
+          for (i in seq_along(progress_steps)) {
+            if (future::resolved(computation_promise)) break
+            Sys.sleep(0.3)
+            shiny::incProgress(0.05, detail = paste("Processing step", i, "of", length(progress_steps), "..."))
+          }
+          computation_result <- future::value(computation_promise)
+
+          result$coords <- computation_result$coords
+          if (computation_result$method == "t-SNE") {
+            result$perplexity <- computation_result$perplexity
+            result$max_iter <- computation_result$max_iter
+            if (computation_result$perplexity != perplexity_value) {
+              shiny::showNotification(paste("Perplexity adjusted to", computation_result$perplexity), type = "warning")
+            }
+          } else {
+            result$n_neighbors <- computation_result$n_neighbors
+            result$min_dist <- computation_result$min_dist
+          }
+
+          shiny::incProgress(0.3, detail = "Preparing visualization...")
+        })
+
+        shiny::withProgress(message = "Finalizing results...", value = 0.8, {
+          vis_results(result)
+          color_as_factor <- as.factor(result$color_values)
+          pal <- scales::hue_pal()(length(levels(color_as_factor)))
+          names(pal) <- levels(color_as_factor)
+          color_palette(pal)
+          plot_data_for_shared <- data.frame(x = result$coords[, 1], y = result$coords[, 2], color = result$color_values)
+          plot_data_for_shared <- cbind(plot_data_for_shared, as.data.frame(scaled_data))
+          shared_vis_data(SharedData$new(plot_data_for_shared, key = ~ row.names(plot_data_for_shared)))
+          id <- nldr_counter() + 1
+          nldr_counter(id)
+          active_nldr_id(as.character(id))
+          method_settings <- if (method == "t-SNE") {
+            paste0(current_dataset_name(), " - t-SNE (p=", result$perplexity, ")")
+          } else {
+            paste0(current_dataset_name(), " - UMAP (n=", result$n_neighbors, ")")
+          }
+          current <- nldr_datasets()
+          current[[as.character(id)]] <- list(id = id, name = method_settings, result = result, tour_input_data = plot_data_for_shared, timestamp = Sys.time())
+          nldr_datasets(current)
+          shiny::incProgress(0.2, detail = "Complete!")
+        })
 
         quollr_results(NULL)
         optimal_config(NULL)
         show_langevitour_flag(FALSE)
-        shiny::showNotification("Previous analysis results cleared.", type = "message")
+        is_running_visualization(FALSE)
+        shiny::showNotification("Visualization completed successfully!", type = "message")
       },
       error = function(e) {
+        is_running_visualization(FALSE)
         shiny::showModal(shiny::modalDialog(
           title = "Visualization Error",
           paste("An error occurred:", e$message),
@@ -489,10 +581,12 @@ nldr_viz_server <- function(input, output, session) {
 
   shiny::observeEvent(input$run_quollr_analysis, {
     shiny::req(shared_vis_data(), optimal_config())
-
+    if (is_running_quollr_analysis()) return()
+    is_running_quollr_analysis(TRUE)
     tryCatch(
       {
-        shiny::withProgress(message = "Building Quollr Model...", {
+        shiny::withProgress(message = "Building Quollr Model...", value = 0, {
+          shiny::incProgress(0.1, detail = "Preparing data...")
           vis_data <- shared_vis_data()$data()
           optimal <- optimal_config()
           benchmark_val <- if (isTRUE(input$quollr_remove_low_density)) {
@@ -537,6 +631,7 @@ nldr_viz_server <- function(input, output, session) {
           model_highd <- quollr::avg_highd_data(highd_data = highd_data, scaled_nldr_hexid = nldr_df_with_hex_id)
           model_highd <- model_highd |> dplyr::filter(h %in% model_2d$h)
 
+          shiny::incProgress(0.2, detail = "Finalizing model...")
           quollr_results(
             list(
               highd_data = highd_data,
@@ -549,10 +644,13 @@ nldr_viz_server <- function(input, output, session) {
           )
 
           show_langevitour_flag(FALSE)
-          shiny::showNotification("Quollr analysis completed successfully!", type = "message")
         })
+
+        is_running_quollr_analysis(FALSE)
+        shiny::showNotification("Quollr analysis completed successfully!", type = "message")
       },
       error = function(e) {
+        is_running_quollr_analysis(FALSE)
         shiny::showModal(shiny::modalDialog(
           title = "Analysis Error",
           if (grepl("Not enough dense hexagons", e$message, fixed = TRUE)) {
@@ -567,18 +665,22 @@ nldr_viz_server <- function(input, output, session) {
 
   shiny::observeEvent(input$run_binwidth_optimization, {
     shiny::req(shared_vis_data(), vis_results())
+
+    if (is_running_binwidth_optimization()) return()
+    is_running_binwidth_optimization(TRUE)
+
     tryCatch(
       {
-        shiny::withProgress(message = "Optimizing binwidth...", {
-          vis_data <- shared_vis_data()$data()
-          highd_cols <- setdiff(names(vis_data)[sapply(vis_data, is.numeric)], c("x", "y", "color"))
-          highd_data <- vis_data[, highd_cols, drop = FALSE]
-          highd_data$ID <- seq_len(nrow(highd_data))
-          nldr_data <- data.frame(emb1 = vis_data$x, emb2 = vis_data$y, ID = seq_len(nrow(vis_data)))
-
+        vis_data <- shared_vis_data()$data()
+        highd_cols <- setdiff(names(vis_data)[sapply(vis_data, is.numeric)], c("x", "y", "color"))
+        highd_data <- vis_data[, highd_cols, drop = FALSE]
+        highd_data$ID <- seq_len(nrow(highd_data))
+        nldr_data <- data.frame(emb1 = vis_data$x, emb2 = vis_data$y, ID = seq_len(nrow(vis_data)))
+        optimization_promise <- future::future({
           error_df_all <- quollr::gen_diffbin1_errors(highd_data = highd_data, nldr_data = nldr_data)
-
-          if (is.null(error_df_all) || nrow(error_df_all) == 0) stop("Optimization failed.")
+          if (is.null(error_df_all) || nrow(error_df_all) == 0) {
+            stop("Optimization failed.")
+          }
 
           processed_results <- error_df_all %>%
             dplyr::filter(b1 >= 5) %>%
@@ -589,18 +691,45 @@ nldr_viz_server <- function(input, output, session) {
 
           optimal_row <- processed_results %>% dplyr::slice_min(RMSE, n = 1)
 
+          list(
+            processed_results = processed_results,
+            optimal_row = optimal_row
+          )
+        }, seed = TRUE)
+
+        shiny::withProgress(message = "Optimizing binwidth...", value = 0, {
+          shiny::incProgress(0.1, detail = "Preparing data...")
+          Sys.sleep(0.1)  # Brief pause for UI update
+
+          shiny::incProgress(0.2, detail = "Computing optimization errors...")
+
+          progress_steps <- seq(0.3, 0.7, length.out = 8)
+          for (i in seq_along(progress_steps)) {
+            if (future::resolved(optimization_promise)) break
+            Sys.sleep(0.4)
+            shiny::incProgress(0.05, detail = paste("Analyzing binwidth configuration", i, "..."))
+          }
+
+          optimization_result <- future::value(optimization_promise)
+
+          shiny::incProgress(0.2, detail = "Processing results...")
+
           shiny::req(active_nldr_id())
           current_vis_id <- active_nldr_id()
 
           all_stored_results <- binwidth_optimization_results()
-          all_stored_results[[current_vis_id]] <- processed_results
+          all_stored_results[[current_vis_id]] <- optimization_result$processed_results
           binwidth_optimization_results(all_stored_results)
-          optimal_config(optimal_row)
+          optimal_config(optimization_result$optimal_row)
 
-          shiny::showNotification("Optimization complete!", type = "message")
+          shiny::incProgress(0.1, detail = "Complete!")
         })
+
+        is_running_binwidth_optimization(FALSE)
+        shiny::showNotification("Binwidth optimization completed successfully!", type = "message")
       },
       error = function(e) {
+        is_running_binwidth_optimization(FALSE)
         shiny::showModal(shiny::modalDialog(title = "Optimization Error", e$message))
       }
     )
@@ -748,13 +877,21 @@ nldr_viz_server <- function(input, output, session) {
     if (length(selected_ids) < 2) {
       return(shiny::showModal(shiny::modalDialog(title = "Insufficient Selection", "Please select at least 2 datasets.")))
     }
+
+    if (is_running_comparison()) return()
+    is_running_comparison(TRUE)
+
     tryCatch(
       {
-        shiny::withProgress(message = "Generating comparison...", {
+        shiny::withProgress(message = "Generating comparison...", value = 0, {
+          shiny::incProgress(0.1, detail = "Collecting optimization results...")
+          Sys.sleep(0.1)  # Brief pause for UI update
+
           stored_results <- binwidth_optimization_results()
           datasets_info <- nldr_datasets()
           results_to_compare <- list()
 
+          shiny::incProgress(0.3, detail = "Processing selected datasets...")
           for (ds_id in selected_ids) {
             if (ds_id %in% names(stored_results)) {
               df <- stored_results[[ds_id]]
@@ -766,13 +903,18 @@ nldr_viz_server <- function(input, output, session) {
             }
           }
 
+          shiny::incProgress(0.4, detail = "Combining results...")
           if (length(results_to_compare) > 0) {
             comparison_results(dplyr::bind_rows(results_to_compare))
-            shiny::showNotification("Comparison plot generated!", type = "message")
+            shiny::incProgress(0.2, detail = "Complete!")
           }
         })
+
+        is_running_comparison(FALSE)
+        shiny::showNotification("Comparison analysis completed successfully!", type = "message")
       },
       error = function(e) {
+        is_running_comparison(FALSE)
         shiny::showModal(shiny::modalDialog(title = "Comparison Error", e$message))
       }
     )
