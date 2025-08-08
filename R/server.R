@@ -386,7 +386,7 @@ nldr_viz_server <- function(input, output, session) {
           color_palette(pal)
           plot_data_for_shared <- data.frame(x = result$coords[, 1], y = result$coords[, 2], color = result$color_values)
           plot_data_for_shared <- cbind(plot_data_for_shared, as.data.frame(scaled_data))
-          shared_vis_data(SharedData$new(plot_data_for_shared, key = ~ row.names(plot_data_for_shared)))
+          shared_vis_data(crosstalk::SharedData$new(plot_data_for_shared, key = ~ row.names(plot_data_for_shared)))
           id <- nldr_counter() + 1
           nldr_counter(id)
           active_nldr_id(as.character(id))
@@ -396,7 +396,14 @@ nldr_viz_server <- function(input, output, session) {
             paste0(current_dataset_name(), " - UMAP (n=", result$n_neighbors, ")")
           }
           current <- nldr_datasets()
-          current[[as.character(id)]] <- list(id = id, name = method_settings, result = result, tour_input_data = plot_data_for_shared, timestamp = Sys.time())
+          current[[as.character(id)]] <- list(
+            id = id, 
+            name = method_settings, 
+            result = result, 
+            tour_input_data = plot_data_for_shared, 
+            color_palette = pal,
+            timestamp = Sys.time()
+          )
           nldr_datasets(current)
           shiny::incProgress(0.2, detail = "Complete!")
         })
@@ -472,13 +479,29 @@ nldr_viz_server <- function(input, output, session) {
 
   tour_object <- shiny::reactive({
     shiny::req(shared_vis_data(), input$tour_display_type, !is.null(input$tour_axes), !is.null(input$show_edges), color_palette())
+    
+    brushing_enabled <- input$enable_brushing
+    
     sd_obj <- shared_vis_data()
-    pal <- color_palette()
+    stored_pal <- color_palette()
     projection_cols <- setdiff(names(sd_obj$data()), c("x", "y", "color"))
 
     if (length(projection_cols) < 2) {
       shiny::showNotification("Not enough high-dimensional columns for the tour.", type = "warning")
       return(NULL)
+    }
+
+    current_color_levels <- as.factor(sd_obj$data()$color)
+    if (length(stored_pal) != length(levels(current_color_levels))) {
+      pal <- scales::hue_pal()(length(levels(current_color_levels)))
+      names(pal) <- levels(current_color_levels)
+    } else {
+      if (!all(names(stored_pal) %in% levels(current_color_levels))) {
+        pal <- scales::hue_pal()(length(levels(current_color_levels)))
+        names(pal) <- levels(current_color_levels)
+      } else {
+        pal <- stored_pal
+      }
     }
 
     detour_obj <- detourr::detour(
@@ -556,17 +579,30 @@ nldr_viz_server <- function(input, output, session) {
 
   shiny::observe({
     datasets <- nldr_datasets()
-    lapply(names(datasets), function(ds_id) {
-      shiny::observeEvent(input[[paste0("nldr_", ds_id)]], {
-        shiny::req(input[[paste0("nldr_", ds_id)]])
+    if (length(datasets) == 0) return()
+    
+    for (ds_id in names(datasets)) {
+      checkbox_input <- input[[paste0("nldr_", ds_id)]]
+      if (isTRUE(checkbox_input)) {
         ds <- datasets[[ds_id]]
         active_nldr_id(ds_id)
         vis_results(ds$result)
-        shared_vis_data(SharedData$new(ds$tour_input_data, key = ~ row.names(ds$tour_input_data)))
+        shared_vis_data(crosstalk::SharedData$new(ds$tour_input_data, key = ~ row.names(ds$tour_input_data)))
+        
+        if (!is.null(ds$color_palette)) {
+          color_palette(ds$color_palette)
+        } else {
+          color_as_factor <- as.factor(ds$result$color_values)
+          pal <- scales::hue_pal()(length(levels(color_as_factor)))
+          names(pal) <- levels(color_as_factor)
+          color_palette(pal)
+        }
+        
         shiny::showNotification(paste("Loaded:", ds$name), type = "message")
         shiny::updateCheckboxInput(session, paste0("nldr_", ds_id), value = FALSE)
-      })
-    })
+        break  
+      }
+    }
   })
 
   shiny::observeEvent(c(input$auto_bin_range, shared_vis_data()), {
@@ -1003,5 +1039,269 @@ nldr_viz_server <- function(input, output, session) {
     cat("Optimal Binwidth (a1):", round(overall_best$a1, 3), "\n")
     cat("Corresponding Bins (b1):", overall_best$b1, "\n")
     cat("Resulting RMSE:", round(overall_best$RMSE, 5), "\n")
+  })
+
+  sidebyside_dataset1 <- shiny::reactiveVal(NULL)
+  sidebyside_dataset2 <- shiny::reactiveVal(NULL)
+  sidebyside_shared_data1 <- shiny::reactiveVal(NULL)
+  sidebyside_shared_data2 <- shiny::reactiveVal(NULL)
+
+  output$sidebyside_dataset1_selection <- shiny::renderUI({
+    datasets <- nldr_datasets()
+    if (length(datasets) == 0) {
+      return(shiny::p("No NLDR visualizations available. Create visualizations first."))
+    }
+    
+    choices <- setNames(names(datasets), sapply(datasets, function(ds) ds$name))
+    shiny::selectInput("sidebyside_dataset1", "Select First Dataset:",
+      choices = c("Select a dataset..." = "", choices),
+      selected = ""
+    )
+  })
+
+  output$sidebyside_dataset2_selection <- shiny::renderUI({
+    datasets <- nldr_datasets()
+    if (length(datasets) == 0) {
+      return(NULL) 
+    }
+    
+    choices <- setNames(names(datasets), sapply(datasets, function(ds) ds$name))
+    shiny::selectInput("sidebyside_dataset2", "Select Second Dataset:",
+      choices = c("Select a dataset..." = "", choices),
+      selected = ""
+    )
+  })
+
+  shiny::observeEvent(input$generate_sidebyside_comparison, {
+    shiny::req(input$sidebyside_dataset1, input$sidebyside_dataset2)
+    
+    if (input$sidebyside_dataset1 == "" || input$sidebyside_dataset2 == "") {
+      shiny::showNotification("Please select both datasets for comparison.", type = "warning")
+      return()
+    }
+    
+    if (input$sidebyside_dataset1 == input$sidebyside_dataset2) {
+      shiny::showNotification("Please select two different datasets for comparison.", type = "warning")
+      return()
+    }
+    
+    datasets <- nldr_datasets()
+    dataset1 <- datasets[[input$sidebyside_dataset1]]
+    dataset2 <- datasets[[input$sidebyside_dataset2]]
+    
+    if (nrow(dataset1$result$coords) != nrow(dataset2$result$coords)) {
+      shiny::showNotification("Warning: Datasets have different numbers of points. Linked brushing may not work as expected.", type = "warning")
+    }
+    
+    sidebyside_dataset1(dataset1)
+    sidebyside_dataset2(dataset2)
+
+    if (input$enable_linked_brushing) {
+      n_points <- min(nrow(dataset1$result$coords), nrow(dataset2$result$coords))
+      shared_keys <- paste0("point_", seq_len(n_points))
+
+      plot_data1 <- data.frame(
+        x = dataset1$result$coords[1:n_points, 1],
+        y = dataset1$result$coords[1:n_points, 2],
+        color = dataset1$result$color_values[1:n_points],
+        dataset = "Dataset 1",
+        key = shared_keys,
+        stringsAsFactors = FALSE
+      )
+      
+      plot_data2 <- data.frame(
+        x = dataset2$result$coords[1:n_points, 1],
+        y = dataset2$result$coords[1:n_points, 2],
+        color = dataset2$result$color_values[1:n_points],
+        dataset = "Dataset 2",
+        key = shared_keys,
+        stringsAsFactors = FALSE
+      )
+
+      shared1 <- crosstalk::SharedData$new(plot_data1, key = ~key, group = "sidebyside_comparison")
+      shared2 <- crosstalk::SharedData$new(plot_data2, key = ~key, group = "sidebyside_comparison")
+      
+      sidebyside_shared_data1(shared1)
+      sidebyside_shared_data2(shared2)
+    } else {
+      sidebyside_shared_data1(NULL)
+      sidebyside_shared_data2(NULL)
+    }
+    
+    shiny::showNotification("Side-by-side comparison generated successfully!", type = "message")
+  })
+
+  shiny::observeEvent(input$clear_sidebyside_selection, {
+    shiny::updateSelectInput(session, "sidebyside_dataset1", selected = "")
+    shiny::updateSelectInput(session, "sidebyside_dataset2", selected = "")
+    sidebyside_dataset1(NULL)
+    sidebyside_dataset2(NULL)
+    sidebyside_shared_data1(NULL)
+    sidebyside_shared_data2(NULL)
+  })
+
+  output$sidebyside_plot1_title <- shiny::renderText({
+    dataset1 <- sidebyside_dataset1()
+    if (is.null(dataset1)) return("First Dataset")
+    return(dataset1$name)
+  })
+
+  output$sidebyside_plot2_title <- shiny::renderText({
+    dataset2 <- sidebyside_dataset2()
+    if (is.null(dataset2)) return("Second Dataset")
+    return(dataset2$name)
+  })
+
+  output$sidebyside_plot1 <- plotly::renderPlotly({
+    dataset1 <- sidebyside_dataset1()
+    if (is.null(dataset1)) {
+      return(plotly::plot_ly() %>% 
+        plotly::add_text(x = 0.5, y = 0.5, text = "Select datasets to compare", 
+                        textfont = list(size = 16, color = "gray")) %>%
+        plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
+    }
+ 
+    color_pal <- dataset1$color_palette
+    if (is.null(color_pal)) {
+      color_as_factor <- as.factor(dataset1$result$color_values)
+      color_pal <- scales::hue_pal()(length(levels(color_as_factor)))
+      names(color_pal) <- levels(color_as_factor)
+    }
+    
+    if (input$enable_linked_brushing && !is.null(sidebyside_shared_data1())) {
+      plot_data <- sidebyside_shared_data1()
+ 
+      p <- plot_data %>%
+        plotly::plot_ly(x = ~x, y = ~y, color = ~color,
+                       colors = color_pal,
+                       type = "scatter", mode = "markers",
+                       marker = list(size = 6, opacity = 0.7),
+                       hovertemplate = "<b>%{color}</b><br>X: %{x:.3f}<br>Y: %{y:.3f}<extra></extra>",
+                       source = "sidebyside_plot1") %>%
+        plotly::layout(
+          title = list(text = dataset1$name, font = list(size = 14)),
+          xaxis = list(title = paste(dataset1$result$method, "Dimension 1")),
+          yaxis = list(title = paste(dataset1$result$method, "Dimension 2")),
+          showlegend = TRUE,
+          legend = list(title = list(text = dataset1$result$color_col)),
+          dragmode = "select"
+        ) %>%
+        plotly::highlight(
+          on = "plotly_selected", 
+          off = "plotly_deselect",
+          opacityDim = 0.3,
+          selected = plotly::attrs_selected(opacity = 1)
+        )
+    } else {
+      p <- plotly::plot_ly(x = dataset1$result$coords[, 1], 
+                          y = dataset1$result$coords[, 2],
+                          color = dataset1$result$color_values,
+                          colors = color_pal,
+                          type = "scatter", mode = "markers",
+                          marker = list(size = 6, opacity = 0.7),
+                          hovertemplate = "<b>%{color}</b><br>X: %{x:.3f}<br>Y: %{y:.3f}<extra></extra>") %>%
+        plotly::layout(
+          title = list(text = dataset1$name, font = list(size = 14)),
+          xaxis = list(title = paste(dataset1$result$method, "Dimension 1")),
+          yaxis = list(title = paste(dataset1$result$method, "Dimension 2")),
+          showlegend = TRUE,
+          legend = list(title = list(text = dataset1$result$color_col))
+        )
+    }
+    
+    return(p)
+  })
+
+  output$sidebyside_plot2 <- plotly::renderPlotly({
+    dataset2 <- sidebyside_dataset2()
+    if (is.null(dataset2)) {
+      return(plotly::plot_ly() %>% 
+        plotly::add_text(x = 0.5, y = 0.5, text = "Select datasets to compare", 
+                        textfont = list(size = 16, color = "gray")) %>%
+        plotly::layout(xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)))
+    }
+    
+    color_pal <- dataset2$color_palette
+    if (is.null(color_pal)) {
+      color_as_factor <- as.factor(dataset2$result$color_values)
+      color_pal <- scales::hue_pal()(length(levels(color_as_factor)))
+      names(color_pal) <- levels(color_as_factor)
+    }
+
+    if (input$enable_linked_brushing && !is.null(sidebyside_shared_data2())) {
+      plot_data <- sidebyside_shared_data2()
+
+      p <- plot_data %>%
+        plotly::plot_ly(x = ~x, y = ~y, color = ~color,
+                       colors = color_pal,
+                       type = "scatter", mode = "markers",
+                       marker = list(size = 6, opacity = 0.7),
+                       hovertemplate = "<b>%{color}</b><br>X: %{x:.3f}<br>Y: %{y:.3f}<extra></extra>",
+                       source = "sidebyside_plot2") %>%
+        plotly::layout(
+          title = list(text = dataset2$name, font = list(size = 14)),
+          xaxis = list(title = paste(dataset2$result$method, "Dimension 1")),
+          yaxis = list(title = paste(dataset2$result$method, "Dimension 2")),
+          showlegend = TRUE,
+          legend = list(title = list(text = dataset2$result$color_col)),
+          dragmode = "select"
+        ) %>%
+        plotly::highlight(
+          on = "plotly_selected", 
+          off = "plotly_deselect",
+          opacityDim = 0.3,
+          selected = plotly::attrs_selected(opacity = 1)
+        )
+    } else {
+      p <- plotly::plot_ly(x = dataset2$result$coords[, 1], 
+                          y = dataset2$result$coords[, 2],
+                          color = dataset2$result$color_values,
+                          colors = color_pal,
+                          type = "scatter", mode = "markers",
+                          marker = list(size = 6, opacity = 0.7),
+                          hovertemplate = "<b>%{color}</b><br>X: %{x:.3f}<br>Y: %{y:.3f}<extra></extra>") %>%
+        plotly::layout(
+          title = list(text = dataset2$name, font = list(size = 14)),
+          xaxis = list(title = paste(dataset2$result$method, "Dimension 1")),
+          yaxis = list(title = paste(dataset2$result$method, "Dimension 2")),
+          showlegend = TRUE,
+          legend = list(title = list(text = dataset2$result$color_col))
+        )
+    }
+    
+    return(p)
+  })
+  
+  output$linked_brushing_status <- shiny::renderText({
+    if (!isTRUE(input$enable_linked_brushing)) {
+      return("Linked brushing is disabled")
+    }
+    
+    if (is.null(sidebyside_shared_data1()) || is.null(sidebyside_shared_data2())) {
+      return("Ready for comparison")
+    }
+    
+    return("Linked brushing is active")
+  })
+  
+  shiny::observeEvent(input$sidebyside_plot1_selected, {
+    if (input$enable_linked_brushing) {
+      cat("Selection event from plot 1:", length(input$sidebyside_plot1_selected$pointNumber), "points\n")
+    }
+  })
+  
+  shiny::observeEvent(input$sidebyside_plot2_selected, {
+    if (input$enable_linked_brushing) {
+      cat("Selection event from plot 2:", length(input$sidebyside_plot2_selected$pointNumber), "points\n")
+    }
+  })
+
+  shiny::observeEvent(input$enable_brushing, {
+    if (!isTRUE(input$enable_brushing) && !is.null(shared_vis_data())) {
+      current_data <- shared_vis_data()$data()
+      new_shared_data <- crosstalk::SharedData$new(current_data, key = ~ row.names(current_data))
+      shared_vis_data(new_shared_data)
+      shiny::showNotification("Selection cleared", type = "message", duration = 1)
+    }
   })
 }

@@ -321,47 +321,102 @@ nldr_viz_ui <- function() {
           width = 300,
           gap = "1rem",
           bslib::card(
-            bslib::card_header("Dataset Selection for Comparison"),
-            shiny::helpText("To compare methods, first generate an NLDR visualization for each. Then, go to the 'Diagnosing' tab and run 'Optimize Binwidth' for each one. Finally, select them here to compare their performance.",
-              class = "text-muted mb-3"
-            ),
-            shiny::uiOutput("comparison_dataset_selection"),
-            shiny::hr(),
-            shiny::div(
-              shiny::conditionalPanel(
-                condition = "!output.comparison_button_disabled",
-                shiny::actionButton("run_comparison_analysis", "Generate Comparison Plot",
-                  class = "btn-primary w-100"
+            bslib::card_header("Comparison Type"),
+            shiny::radioButtons("comparison_type", "Choose Comparison Type:",
+              choices = c("NLDR Settings Comparison" = "settings",
+                         "Side-by-Side Visualization" = "visualization"),
+              selected = "settings"
+            )
+          ),
+          shiny::conditionalPanel(
+            condition = "input.comparison_type == 'settings'",
+            bslib::card(
+              bslib::card_header("Dataset Selection"),
+              shiny::helpText("To compare methods, first generate an NLDR visualization for each. Then, go to the 'Diagnosing' tab and run 'Optimize Binwidth' for each one. Finally, select them here to compare their performance.",
+                class = "text-muted mb-3"
+              ),
+              shiny::uiOutput("comparison_dataset_selection"),
+              shiny::hr(),
+              shiny::div(
+                shiny::conditionalPanel(
+                  condition = "!output.comparison_button_disabled",
+                  shiny::actionButton("run_comparison_analysis", "Generate Comparison Plot",
+                    class = "btn-primary w-100"
+                  )
+                ),
+                shiny::conditionalPanel(
+                  condition = "output.comparison_button_disabled",
+                  shiny::div(
+                    class = "btn btn-primary disabled w-100",
+                    shiny::icon("spinner", class = "fa-spin"),
+                    " Comparing..."
+                  )
                 )
               ),
-              shiny::conditionalPanel(
-                condition = "output.comparison_button_disabled",
-                shiny::div(
-                  class = "btn btn-primary disabled w-100",
-                  shiny::icon("spinner", class = "fa-spin"),
-                  " Comparing..."
-                )
+              shiny::actionButton("clear_comparison_selection", "Clear Selection",
+                class = "btn-warning w-100 mt-2"
+              )
+            )
+          ),
+          
+          shiny::conditionalPanel(
+            condition = "input.comparison_type == 'visualization'",
+            bslib::card(
+              bslib::card_header("Dataset Selection for Side-by-Side Comparison"),
+              shiny::uiOutput("sidebyside_dataset1_selection"),
+              shiny::uiOutput("sidebyside_dataset2_selection"),
+              shiny::hr(),
+              shiny::checkboxInput("enable_linked_brushing", "Enable Linked Brushing", value = TRUE),
+              shiny::hr(),
+              shiny::actionButton("generate_sidebyside_comparison", "Generate Side-by-Side Comparison",
+                class = "btn-success w-100"
+              ),
+              shiny::actionButton("clear_sidebyside_selection", "Clear Selection",
+                class = "btn-warning w-100 mt-2"
+              )
+            )
+          )
+        ),
+        # Main content area with conditional panels
+        shiny::conditionalPanel(
+          condition = "input.comparison_type == 'settings'",
+          bslib::layout_columns(
+            col_widths = c(8, 4),
+            gap = "20px",
+            bslib::card(
+              bslib::card_header("RMSE Comparison Plot"),
+              bslib::card_body(
+                plotly::plotlyOutput("comparison_mse_plot", height = "550px")
               )
             ),
-            shiny::actionButton("clear_comparison_selection", "Clear Selection",
-              class = "btn-warning w-100 mt-2"
+            bslib::card(
+              bslib::card_header("Best Configuration Summary"),
+              bslib::card_body(
+                style = "padding-top: 1.25rem;",
+                shiny::verbatimTextOutput("best_configuration_summary")
+              )
             )
-          ),
+          )
         ),
-        bslib::layout_columns(
-          col_widths = c(8, 4),
-          gap = "20px",
-          bslib::card(
-            bslib::card_header("RMSE Comparison Plot"),
-            bslib::card_body(
-              plotly::plotlyOutput("comparison_mse_plot", height = "550px")
-            )
-          ),
-          bslib::card(
-            bslib::card_header("Best Configuration Summary"),
-            bslib::card_body(
-              style = "padding-top: 1.25rem;",
-              shiny::verbatimTextOutput("best_configuration_summary")
+        shiny::conditionalPanel(
+          condition = "input.comparison_type == 'visualization'",
+          bslib::layout_columns(
+            col_widths = c(6, 6),
+            gap = "20px",
+            height = "700px",
+            bslib::card(
+              bslib::card_header(shiny::textOutput("sidebyside_plot1_title")),
+              bslib::card_body(
+                padding = "0.5rem",
+                plotly::plotlyOutput("sidebyside_plot1", height = "600px")
+              )
+            ),
+            bslib::card(
+              bslib::card_header(shiny::textOutput("sidebyside_plot2_title")),
+              bslib::card_body(
+                padding = "0.5rem",
+                plotly::plotlyOutput("sidebyside_plot2", height = "600px")
+              )
             )
           )
         )
