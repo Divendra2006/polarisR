@@ -204,7 +204,7 @@ nldr_viz_ui <- function() {
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           width = 300,
-          gap = "1rem",
+          gap = "3rem",
           bslib::card(
             bslib::card_header("Binwidth Optimization"),
             shiny::helpText("Click the button to automatically test a range of bin widths and find the optimal configuration based on RMSE."),
@@ -319,20 +319,25 @@ nldr_viz_ui <- function() {
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           width = 300,
-          gap = "1rem",
+          gap = "3rem",
           bslib::card(
             bslib::card_header("Comparison Type"),
-            shiny::radioButtons("comparison_type", "Choose Comparison Type:",
-              choices = c("NLDR Settings Comparison" = "settings",
-                         "Side-by-Side Visualization" = "visualization"),
+            shiny::radioButtons(
+              "comparison_type",
+              tags$div(style = "margin-bottom: 10px;", "Choose Comparison Type:"),
+              choices = c(
+                "NLDR Settings Comparison" = "settings",
+                "Side-by-Side Visualization" = "visualization"
+              ),
               selected = "settings"
             )
+
           ),
           shiny::conditionalPanel(
             condition = "input.comparison_type == 'settings'",
             bslib::card(
               bslib::card_header("Dataset Selection"),
-              shiny::helpText("To compare methods, first generate an NLDR visualization for each. Then, go to the 'Diagnosing' tab and run 'Optimize Binwidth' for each one. Finally, select them here to compare their performance.",
+              shiny::helpText("To compare methods, create NLDRs, optimize binwidth, then select to compare.",
                 class = "text-muted mb-3"
               ),
               shiny::uiOutput("comparison_dataset_selection"),
@@ -340,7 +345,7 @@ nldr_viz_ui <- function() {
               shiny::div(
                 shiny::conditionalPanel(
                   condition = "!output.comparison_button_disabled",
-                  shiny::actionButton("run_comparison_analysis", "Generate Comparison Plot",
+                  shiny::actionButton("run_comparison_analysis", "Run Comparison Plot",
                     class = "btn-primary w-100"
                   )
                 ),
@@ -358,17 +363,17 @@ nldr_viz_ui <- function() {
               )
             )
           ),
-          
+
           shiny::conditionalPanel(
             condition = "input.comparison_type == 'visualization'",
             bslib::card(
-              bslib::card_header("Dataset Selection for Side-by-Side Comparison"),
+              bslib::card_header("Dataset Selection"),
               shiny::uiOutput("sidebyside_dataset1_selection"),
               shiny::uiOutput("sidebyside_dataset2_selection"),
               shiny::hr(),
               shiny::checkboxInput("enable_linked_brushing", "Enable Linked Brushing", value = TRUE),
               shiny::hr(),
-              shiny::actionButton("generate_sidebyside_comparison", "Generate Side-by-Side Comparison",
+              shiny::actionButton("generate_sidebyside_comparison", "Run Visualization",
                 class = "btn-success w-100"
               ),
               shiny::actionButton("clear_sidebyside_selection", "Clear Selection",
