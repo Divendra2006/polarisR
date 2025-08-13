@@ -46,3 +46,9 @@
 #'
 #' @source [PHATE](https://github.com/KrishnaswamyLab/PHATE/blob/master/Python/phate/tree.py)
 "fake_trees"
+
+#' Four clusters dataset (internal use)
+#' 
+#' @format A data frame with 2000 rows and 5 columns.
+#' @keywords internal
+"four_clusters"

@@ -2,15 +2,16 @@
 #'
 #' Creates the user interface for the NLDR visualization tool
 #' @import shiny
-#' @importFrom bslib page_sidebar card card_header card_body layout_sidebar nav_panel nav_spacer
+#' @importFrom bslib page_navbar bs_theme nav_panel layout_sidebar sidebar card card_header card_body page_sidebar
+#' @importFrom DT DTOutput
+#' @importFrom plotly plotlyOutput
 #' @return A Shiny UI function
-#' @keywords internal
+#' @export
 nldr_viz_ui <- function() {
   bslib::page_navbar(
     title = "NLDR Visualization Tool",
     theme = bslib::bs_theme(bootswatch = "lumen"),
-
-    shiny::tags$head(
+    header = shiny::tags$head(
       shiny::tags$style(shiny::HTML("
         .btn.disabled {
           pointer-events: none;
@@ -25,7 +26,7 @@ nldr_viz_ui <- function() {
         }
       "))
     ),
-    bslib::nav_spacer(),
+    
     bslib::nav_panel(
       title = "Dataset Preview",
       bslib::layout_sidebar(
@@ -65,8 +66,7 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    bslib::nav_spacer(),
-
+    
     bslib::nav_panel(
       title = "Dataset Visualization",
       bslib::layout_sidebar(
@@ -139,8 +139,7 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    bslib::nav_spacer(),
-
+    
     bslib::nav_panel(
       title = "Dynamic Tour",
       bslib::layout_sidebar(
@@ -197,8 +196,7 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    bslib::nav_spacer(),
-
+    
     bslib::nav_panel(
       title = "Diagnosing",
       bslib::layout_sidebar(
@@ -313,7 +311,7 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    bslib::nav_spacer(),
+    
     bslib::nav_panel(
       title = "Method Comparison",
       bslib::layout_sidebar(
@@ -426,7 +424,6 @@ nldr_viz_ui <- function() {
           )
         )
       )
-    ),
-    bslib::nav_spacer()
+    )
   )
 }

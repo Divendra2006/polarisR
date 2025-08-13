@@ -5,13 +5,28 @@
 #' @param input Shiny input object
 #' @param output Shiny output object
 #' @param session Shiny session object
+#' @import shiny
 #' @importFrom magrittr %>%
 #' @importFrom crosstalk SharedData
-#' @importFrom plotly highlight
+#' @importFrom plotly highlight renderPlotly plotlyOutput ggplotly layout config plot_ly add_text
 #' @importFrom FNN get.knn
+#' @importFrom future future resolved value plan multisession multicore sequential supportsMulticore
+#' @importFrom ggplot2 ggplot aes geom_point labs coord_fixed theme_minimal geom_line scale_color_manual guide_legend
+#' @importFrom DT renderDT datatable DTOutput
+#' @importFrom detourr detour tour_aes tour_path show_scatter show_sage show_slice shinyRenderDisplayScatter2d displayScatter2dOutput
+#' @importFrom tourr grand_tour
+#' @importFrom quollr gen_scaled_data hex_binning extract_hexbin_centroids tri_bin_centroids gen_edges avg_highd_data gen_diffbin1_errors predict_emb comb_data_model show_langevitour glance
+#' @importFrom dplyr filter group_by slice_min ungroup arrange left_join mutate bind_rows
+#' @importFrom stats quantile setNames var
+#' @importFrom utils data read.csv
 #' @return A Shiny server function
-#' @keywords internal
+#' @export
 nldr_viz_server <- function(input, output, session) {
+  # Global variable bindings to avoid R CMD check NOTEs
+  x <- y <- color <- n_h <- h <- b1 <- a1 <- RMSE <- NULL
+  emb1 <- pred_emb_1 <- emb2 <- pred_emb_2 <- Residual <- NULL
+  Error_Level <- tooltip_text <- NULL
+  
   if (!future::supportsMulticore()) {
     future::plan(future::multisession, workers = 2)
   } else {
@@ -67,8 +82,14 @@ nldr_viz_server <- function(input, output, session) {
   shiny::outputOptions(output, "comparison_button_disabled", suspendWhenHidden = FALSE)
 
   extract_base_dataset_name <- function(full_name) {
-    base_name <- gsub("\\s*-\\s*(t-SNE|UMAP).*$", "", full_name)
-    return(trimws(base_name))
+    # Only extract base name if there are spaces around the dash (like "data - t-SNE")
+    # Keep intact if no spaces (like "data-t-SNE")
+    if (grepl("\\s-\\s", full_name)) {
+      base_name <- gsub("\\s*-\\s*(t-SNE|UMAP).*$", "", full_name)
+      return(trimws(base_name))
+    } else {
+      return(full_name)
+    }
   }
 
   check_empty_cells <- function(data) {
@@ -1033,7 +1054,7 @@ nldr_viz_server <- function(input, output, session) {
 
     overall_best <- results %>% dplyr::slice_min(RMSE, n = 1, with_ties = FALSE)
 
-    cat("🏆 Best Configuration Found\n--------------------------\n")
+    cat("*** Best Configuration Found ***\n--------------------------\n")
     cat("Name:", overall_best$dataset_name, "\n")
     cat("Method:", overall_best$method, "\n")
     cat("Optimal Binwidth (a1):", round(overall_best$a1, 3), "\n")

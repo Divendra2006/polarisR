@@ -4,7 +4,10 @@
 \alias{run_nldr_viz}
 \title{Run NLDR Visualization Tool}
 \usage{
-run_nldr_viz()
+run_nldr_viz(...)
+}
+\arguments{
+\item{...}{Additional arguments passed to shiny::shinyApp}
 }
 \value{
 Shiny application object

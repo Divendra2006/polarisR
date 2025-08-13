@@ -3,32 +3,35 @@
 #' Loads datasets from the package data or uses built-in datasets
 #'
 #' @return A list of datasets
-#' @keywords internal
+#' @export
 load_custom_datasets <- function() {
   datasets <- list()
 
+  # Load four_clusters dataset
   tryCatch({
-    load(system.file("data", "four_clusters.rda", package = "nldrViz"), envir = environment())
+    data("four_clusters", package = "Polaris", envir = environment())
     if(exists("four_clusters", envir = environment())) {
-      datasets[["four_clusters"]] <- four_clusters
+      datasets[["four_clusters"]] <- get("four_clusters", envir = environment())
     }
   }, error = function(e) {
     warning("Could not load four_clusters data: ", e$message)
   })
 
+  # Load pdfsense dataset
   tryCatch({
-    load(system.file("data", "pdfsense.rda", package = "nldrViz"), envir = environment())
+    data("pdfsense", package = "Polaris", envir = environment())
     if(exists("pdfsense", envir = environment())) {
-      datasets[["pdfsense"]] <- pdfsense
+      datasets[["pdfsense"]] <- get("pdfsense", envir = environment())
     }
   }, error = function(e) {
     warning("Could not load pdfsense data: ", e$message)
   })
 
+  # Load fake_trees dataset as "trees"
   tryCatch({
-    load(system.file("data", "fake_trees.rda", package = "nldrViz"), envir = environment())
+    data("fake_trees", package = "Polaris", envir = environment())
     if(exists("fake_trees", envir = environment())) {
-      datasets[["trees"]] <- fake_trees
+      datasets[["trees"]] <- get("fake_trees", envir = environment())
     }
   }, error = function(e) {
     warning("Could not load fake_trees data: ", e$message)

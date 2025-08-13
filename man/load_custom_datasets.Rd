@@ -12,4 +12,3 @@ A list of datasets
 \description{
 Loads datasets from the package data or uses built-in datasets
 }
-\keyword{internal}

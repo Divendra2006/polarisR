@@ -1,3 +1,11 @@
-^GSoC2025\.Rproj$
+^Polaris\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^\.git$
+^\.gitignore$
+^README\.Rmd$
+^check_output\.txt$
+^data-raw$
+^.*\.Rcheck$
+^\.\.Rcheck$
+^Polaris_.*\.tar\.gz$

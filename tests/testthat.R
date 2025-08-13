@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(GSoC2025)
+library(Polaris)
 
-test_check("GSoC2025")
+test_check("Polaris")

@@ -1,1 +1,1 @@
-# GSoC2025
+# Polaris
