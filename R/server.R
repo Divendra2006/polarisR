@@ -22,7 +22,7 @@
 #' @return A Shiny server function
 #' @export
 nldr_viz_server <- function(input, output, session) {
-  # Global variable bindings to avoid R CMD check NOTEs
+ 
   x <- y <- color <- n_h <- h <- b1 <- a1 <- RMSE <- NULL
   emb1 <- pred_emb_1 <- emb2 <- pred_emb_2 <- Residual <- NULL
   Error_Level <- tooltip_text <- NULL
@@ -82,8 +82,6 @@ nldr_viz_server <- function(input, output, session) {
   shiny::outputOptions(output, "comparison_button_disabled", suspendWhenHidden = FALSE)
 
   extract_base_dataset_name <- function(full_name) {
-    # Only extract base name if there are spaces around the dash (like "data - t-SNE")
-    # Keep intact if no spaces (like "data-t-SNE")
     if (grepl("\\s-\\s", full_name)) {
       base_name <- gsub("\\s*-\\s*(t-SNE|UMAP).*$", "", full_name)
       return(trimws(base_name))
@@ -273,7 +271,6 @@ nldr_viz_server <- function(input, output, session) {
     shiny::req(dataset())
     data <- dataset()
 
-    # Prevent multiple clicks
     if (is_running_visualization()) return()
     is_running_visualization(TRUE)
 
@@ -380,7 +377,7 @@ nldr_viz_server <- function(input, output, session) {
           for (i in seq_along(progress_steps)) {
             if (future::resolved(computation_promise)) break
             Sys.sleep(0.3)
-            shiny::incProgress(0.05, detail = paste("Processing step", i, "of", length(progress_steps), "..."))
+            shiny::incProgress(0.05, detail = "Processing...")
           }
           computation_result <- future::value(computation_promise)
 
