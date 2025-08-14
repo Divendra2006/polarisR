@@ -26,7 +26,9 @@ nldr_viz_ui <- function() {
         }
       "))
     ),
-    
+
+    bslib::nav_spacer(),
+
     bslib::nav_panel(
       title = "Dataset Preview",
       bslib::layout_sidebar(
@@ -66,7 +68,9 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    
+
+    bslib::nav_spacer(),
+
     bslib::nav_panel(
       title = "Dataset Visualization",
       bslib::layout_sidebar(
@@ -139,7 +143,9 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    
+
+    bslib::nav_spacer(),
+
     bslib::nav_panel(
       title = "Dynamic Tour",
       bslib::layout_sidebar(
@@ -196,7 +202,9 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    
+
+    bslib::nav_spacer(),
+
     bslib::nav_panel(
       title = "Diagnosing",
       bslib::layout_sidebar(
@@ -311,7 +319,9 @@ nldr_viz_ui <- function() {
         )
       )
     ),
-    
+
+    bslib::nav_spacer(),
+
     bslib::nav_panel(
       title = "Method Comparison",
       bslib::layout_sidebar(
@@ -424,6 +434,9 @@ nldr_viz_ui <- function() {
           )
         )
       )
-    )
+    ),
+
+    bslib::nav_spacer(),
+
   )
 }
