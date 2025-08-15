@@ -85,3 +85,13 @@ test_that("app UI and server are properly integrated", {
   
   expect_true(is.function(app$serverFuncSource()))
 })
+
+test_that("package namespace is properly configured", {
+  expect_true("Polaris" %in% loadedNamespaces())
+  
+  exported_functions <- getNamespaceExports("Polaris")
+  expect_true("run_nldr_viz" %in% exported_functions)
+  expect_true("nldr_viz_ui" %in% exported_functions)
+  expect_true("nldr_viz_server" %in% exported_functions)
+  expect_true("load_custom_datasets" %in% exported_functions)
+})
