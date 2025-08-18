@@ -2,13 +2,148 @@
 % Please edit documentation in R/ui.R
 \name{nldr_viz_ui}
 \alias{nldr_viz_ui}
-\title{NLDR Visualization Tool UI}
+\title{NLDR Visualization Tool User Interface}
 \usage{
 nldr_viz_ui()
 }
 \value{
-A Shiny UI function
+A \code{\link[shiny]{tagList}} object representing the complete UI structure
+suitable for use in \code{\link[shiny]{shinyApp}} or as a module UI function.
+The returned object contains all necessary HTML, CSS, and JavaScript dependencies.
 }
 \description{
-Creates the user interface for the NLDR visualization tool
+Creates the comprehensive user interface for the NLDR visualization tool using modern
+Bootstrap 5 styling with bslib. The UI provides an intuitive tabbed interface for
+data exploration, dimensionality reduction, quality assessment, and method comparison.
 }
+\details{
+The user interface is organized into five main navigation panels:
+
+\strong{1. Dataset Preview Tab:}
+\itemize{
+\item File upload widget for CSV datasets with validation
+\item Selection of built-in example datasets (four_clusters, pdfsense, fake_trees)
+\item Interactive column selection with auto-selection option
+\item Data preview table with scrolling and pagination
+\item Dataset summary statistics (rows, columns, data types)
+\item Storage and management of processed NLDR results
+}
+
+\strong{2. Dataset Visualization Tab:}
+\itemize{
+\item Method selection: t-SNE or UMAP with parameter controls
+\item t-SNE parameters: perplexity (5-50), max iterations (100-2000), auto-adjust option
+\item UMAP parameters: n_neighbors (2-50), min_dist (0.01-0.99)
+\item Color mapping options with automatic or manual column selection
+\item Reproducibility controls with random seed setting
+\item Large interactive visualization plot (800px height)
+\item Visualization information panel with method details
+}
+
+\strong{3. Dynamic Tour Tab:}
+\itemize{
+\item Tour display types: Scatter, Sage, or Slice projections
+\item Display customization: axes, 5-NN graph edges, point opacity
+\item Type-specific parameters (alpha for Scatter, gamma for Sage, volume for Slice)
+\item Linked brushing functionality for interactive selection
+\item Side-by-side layout: NLDR plot and dynamic tour visualization
+}
+
+\strong{4. Diagnosing Tab:}
+\itemize{
+\item Automated binwidth optimization with RMSE-based selection
+\item Comprehensive quollr analysis for embedding quality assessment
+\item 3D model tour generation with langevitour integration
+\item Results presentation in multiple tabs:
+\itemize{
+\item RMSE vs Binwidth interactive plot
+\item Optimization results table with sortable columns
+\item Model fit visualization showing prediction quality
+\item High-dimensional model tour for deeper exploration
+}
+\item Configuration summary with optimal parameter display
+}
+
+\strong{5. Method Comparison Tab:}
+\itemize{
+\item Two comparison modes: NLDR Settings Comparison and Side-by-Side Visualization
+\item Settings Comparison: RMSE comparison plots across multiple configurations
+\item Side-by-Side: Interactive linked plots for direct method comparison
+\item Dataset selection controls with stored results integration
+\item Linked brushing option for synchronized selections
+\item Best configuration summary and recommendations
+}
+
+The interface uses modern design principles:
+\itemize{
+\item Responsive layout that adapts to different screen sizes
+\item Consistent spacing and typography using Bootstrap 5
+\item Loading indicators and progress feedback for long-running operations
+\item Intuitive iconography and color coding for different actions
+\item Collapsible sidebar layouts for optimal screen real estate usage
+\item Contextual help text and tooltips for user guidance
+}
+}
+\note{
+The UI function automatically imports all required dependencies:
+\itemize{
+\item \code{bslib} for modern Bootstrap 5 theming (Lumen theme)
+\item \code{plotly} for interactive visualizations
+\item \code{DT} for enhanced data tables
+\item Custom CSS for loading animations and button states
+\item Font Awesome icons for consistent iconography
+}
+}
+\section{Custom CSS}{
+
+The interface includes custom CSS for:
+\itemize{
+\item Disabled button states with reduced opacity
+\item Spinning loading animations for progress indication
+\item Consistent button styling across different states
+\item Responsive card layouts and spacing
+}
+}
+
+\section{Accessibility}{
+
+The UI follows accessibility best practices:
+\itemize{
+\item Proper ARIA labels and roles for interactive elements
+\item Keyboard navigation support throughout the interface
+\item High contrast color scheme for readability
+\item Screen reader compatible structure and labeling
+}
+}
+
+\examples{
+\dontrun{
+# Create the UI object
+ui <- nldr_viz_ui()
+
+# Use in a complete Shiny application
+shinyApp(ui = nldr_viz_ui(), server = nldr_viz_server)
+
+# Integrate with custom theming
+ui_custom <- nldr_viz_ui()
+# The function returns a structure that can be further customized
+}
+
+}
+\seealso{
+\itemize{
+\item \code{\link{nldr_viz_server}} for corresponding server logic
+\item \code{\link{run_nldr_viz}} for launching the complete application
+\item \code{\link[bslib]{page_navbar}} for navigation structure
+\item \code{\link[plotly]{plotlyOutput}} for interactive plot outputs
+\item \code{\link[DT]{DTOutput}} for enhanced data table displays
+}
+}
+\author{
+GSoC Contributor
+}
+\keyword{dimensionality-reduction}
+\keyword{interface}
+\keyword{shiny}
+\keyword{ui}
+\keyword{visualization}

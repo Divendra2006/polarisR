@@ -2,13 +2,114 @@
 % Please edit documentation in R/data_utils.R
 \name{load_custom_datasets}
 \alias{load_custom_datasets}
-\title{Load Custom Datasets}
+\title{Load Built-in Datasets for NLDR Visualization}
 \usage{
 load_custom_datasets()
 }
 \value{
-A list of datasets
+A named list containing the successfully loaded datasets. Each element
+is a data.frame with the following structure:
+\itemize{
+\item \code{$four_clusters}: data.frame with cluster analysis data
+\item \code{$pdfsense}: data.frame with high-dimensional physics data
+\item \code{$trees}: data.frame with tree-structured synthetic data
+}
+
+If any dataset fails to load, a warning is issued but the function continues,
+returning only the successfully loaded datasets. An empty list is returned
+if no datasets can be loaded.
 }
 \description{
-Loads datasets from the package data or uses built-in datasets
+Loads and returns a named list of built-in example datasets that are included
+with the Polaris package. These datasets are specifically chosen to demonstrate
+different characteristics and challenges in non-linear dimensionality reduction
+analysis and visualization.
 }
+\details{
+This function attempts to load three key datasets from the package:
+
+\strong{four_clusters Dataset:}
+\itemize{
+\item A synthetic dataset with four distinct clusters
+\item 2000 observations across 4 numerical dimensions plus cluster labels
+\item Generated with different shapes (gaussian, pyrrect, crescent, quadratic)
+\item Ideal for testing clustering algorithms and visualization techniques
+\item Useful for demonstrating clear separation in reduced dimensions
+}
+
+\strong{pdfsense Dataset:}
+\itemize{
+\item High-dimensional physics dataset from parton distribution function analysis
+\item Contains 56 primary features (X1-X56) representing parameter variations
+\item Additional metadata columns: InFit, Type, ID, pt, x, mu
+\item Represents sensitivity analysis in high-energy physics
+\item Excellent for testing NLDR methods on real scientific data
+}
+
+\strong{fake_trees Dataset (loaded as "trees"):}
+\itemize{
+\item Synthetic tree-like structure with branching patterns
+\item 3000 observations with 100 dimensions (dim1-dim100) plus branch factor
+\item Generated using diffusion limited aggregation simulation
+\item Contains 10 distinct branching points creating tree topology
+\item Perfect for testing NLDR preservation of topological structure
+}
+}
+\note{
+The function uses \code{\link[utils]{data}} to load datasets from the package
+namespace. If the Polaris package is not properly installed or the data files
+are missing, warnings will be generated for the affected datasets.
+}
+\section{Error Handling}{
+
+The function includes robust error handling:
+\itemize{
+\item Each dataset is loaded in a separate \code{tryCatch} block
+\item Loading failures generate warnings rather than stopping execution
+\item Existence checks ensure datasets are properly loaded before inclusion
+\item Environment management prevents namespace pollution
+}
+}
+
+\section{Usage in Application}{
+
+This function is typically called during application initialization to populate
+the example dataset dropdown in the UI. The returned list is stored in a reactive
+value and can be dynamically extended with user-uploaded datasets.
+}
+
+\examples{
+\dontrun{
+# Load all available datasets
+datasets <- load_custom_datasets()
+names(datasets)  # Shows available dataset names
+
+# Check what was successfully loaded
+if ("four_clusters" \%in\% names(datasets)) {
+  dim(datasets$four_clusters)
+  head(datasets$four_clusters)
+}
+
+# Use in Shiny application initialization
+custom_datasets <- shiny::reactiveVal(load_custom_datasets())
+available_datasets <- shiny::reactiveVal(
+  c("None", names(load_custom_datasets()))
+)
+}
+
+}
+\seealso{
+\itemize{
+\item \code{\link{four_clusters}} for four_clusters dataset documentation
+\item \code{\link{pdfsense}} for pdfsense dataset documentation
+\item \code{\link{fake_trees}} for fake_trees dataset documentation
+\item \code{\link[utils]{data}} for dataset loading mechanism
+}
+}
+\author{
+GSoC Contributor
+}
+\keyword{data}
+\keyword{datasets}
+\keyword{examples}
+\keyword{loading}

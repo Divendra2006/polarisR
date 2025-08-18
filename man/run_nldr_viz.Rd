@@ -7,16 +7,84 @@
 run_nldr_viz(...)
 }
 \arguments{
-\item{...}{Additional arguments passed to shiny::shinyApp}
+\item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}, such as:
+\itemize{
+\item \code{host}: IP address to bind to (default: "127.0.0.1")
+\item \code{port}: Port number to use (default: random available port)
+\item \code{launch.browser}: Whether to launch browser automatically (default: TRUE)
+\item \code{options}: List of additional options for the app
+}}
 }
 \value{
-Shiny application object
+A \code{\link[shiny]{shiny.appobj}} object representing the Shiny application.
+When run, this object launches the interactive NLDR visualization interface in a web browser.
 }
 \description{
-Launches the NLDR Visualization Tool Shiny application
+Launches the interactive NLDR (Non-Linear Dimensionality Reduction) Visualization Tool
+as a Shiny application. This application provides a comprehensive platform for exploring
+high-dimensional datasets using dimensionality reduction techniques such as t-SNE and UMAP,
+with additional features for quality assessment, dynamic tours, and method comparison.
+}
+\details{
+The NLDR Visualization Tool includes the following key features:
+\itemize{
+\item \strong{Dataset Management}: Load custom CSV files or use built-in example datasets
+\item \strong{Dimensionality Reduction}: Apply t-SNE or UMAP with customizable parameters
+\item \strong{Interactive Visualization}: Create interactive plots with brushing and linking
+\item \strong{Dynamic Tours}: Explore high-dimensional data through animated projections
+\item \strong{Quality Assessment}: Use quollr package for embedding quality diagnostics
+\item \strong{Method Comparison}: Compare different NLDR configurations side-by-side
+\item \strong{Reproducibility}: Set random seeds and save/load analysis results
+}
+
+The application is organized into several tabs:
+\itemize{
+\item \strong{Dataset Preview}: Upload data and preview dataset characteristics
+\item \strong{Dataset Visualization}: Apply NLDR methods and visualize results
+\item \strong{Dynamic Tour}: Explore high-dimensional structure through animated tours
+\item \strong{Diagnosing}: Assess embedding quality using binwidth optimization and quollr
+\item \strong{Method Comparison}: Compare different NLDR configurations and visualizations
+}
+}
+\note{
+The application requires several packages to be installed:
+\itemize{
+\item Core visualization: \code{shiny}, \code{bslib}, \code{plotly}, \code{DT}
+\item NLDR methods: \code{Rtsne}, \code{umap}
+\item Quality assessment: \code{quollr}
+\item Dynamic tours: \code{detourr}, \code{tourr}
+\item Data processing: \code{dplyr}, \code{scales}, \code{crosstalk}
+\item Parallel processing: \code{future}
+}
 }
 \examples{
 \dontrun{
+# Launch the application with default settings
 run_nldr_viz()
+
+# Launch on a specific port
+run_nldr_viz(port = 3838)
+
+# Launch without opening browser automatically
+run_nldr_viz(launch.browser = FALSE)
+
+# Store the app object for later use
+app <- run_nldr_viz()
+# The app can then be deployed or run on different configurations
+}
+
+}
+\seealso{
+\itemize{
+\item \code{\link{nldr_viz_ui}} for UI structure
+\item \code{\link{nldr_viz_server}} for server logic
+\item \code{\link{load_custom_datasets}} for data loading utilities
 }
 }
+\author{
+GSoC Contributor
+}
+\keyword{dimensionality-reduction}
+\keyword{interactive}
+\keyword{shiny}
+\keyword{visualization}

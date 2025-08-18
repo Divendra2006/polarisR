@@ -5,9 +5,10 @@ Author: GSoC Contributor
 Maintainer: GSoC Contributor <gsoc.contributor@example.com>
 Authors@R: 
     person("GSoC", "Contributor", email = "gsoc.contributor@example.com", role = c("aut", "cre"))
-Description: A Shiny application for visualizing high-dimensional data using non-linear 
-    dimensionality reduction techniques such as t-SNE and UMAP.
+Description: A Shiny application for visualizing high-dimensional data using non-linear dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an interactive platform to explore high-dimensional datasets, diagnose the quality of the embeddings using the quollr package, and compare different NLDR methods.
 License: MIT + file LICENSE
+URL: https://github.com/Divendra2006/Polaris
+BugReports: https://github.com/Divendra2006/Polaris/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -32,7 +33,9 @@ Imports:
     stats,
     utils
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,    
 Config/testthat/edition: 3
 Depends: 
     R (>= 4.1.0)

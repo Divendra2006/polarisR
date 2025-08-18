@@ -2,20 +2,185 @@
 % Please edit documentation in R/server.R
 \name{nldr_viz_server}
 \alias{nldr_viz_server}
-\title{NLDR Visualization Tool Server}
+\title{NLDR Visualization Tool Server Logic}
 \usage{
 nldr_viz_server(input, output, session)
 }
 \arguments{
-\item{input}{Shiny input object}
+\item{input}{The Shiny input object containing all user interface inputs.
+This includes form controls, button clicks, plot selections, and file uploads.}
 
-\item{output}{Shiny output object}
+\item{output}{The Shiny output object for sending rendered content to the UI.
+Used for plots, tables, text outputs, and dynamic UI elements.}
 
-\item{session}{Shiny session object}
+\item{session}{The Shiny session object for managing client-server communication.
+Provides access to session state, input updates, and client information.}
 }
 \value{
-A Shiny server function
+Invisible NULL. The function sets up reactive expressions and observers
+that handle all server-side logic. The actual outputs are managed through
+the Shiny reactive system and sent to the client via the output object.
 }
 \description{
-Creates the server logic for the NLDR visualization tool
+Implements the comprehensive server-side logic for the NLDR visualization tool.
+This function handles all reactive computations, data processing, visualization
+generation, and user interactions for the multi-tab NLDR analysis application.
 }
+\details{
+The server function manages several key areas of functionality:
+
+\strong{Data Management:}
+\itemize{
+\item File upload validation and CSV parsing with error handling
+\item Built-in dataset loading (four_clusters, pdfsense, fake_trees)
+\item Empty cell detection and data quality validation
+\item Column selection and filtering capabilities
+\item Dynamic dataset storage and retrieval system
+}
+
+\strong{NLDR Computations:}
+\itemize{
+\item t-SNE implementation with parameter validation and auto-adjustment
+\item UMAP processing with neighbor and distance parameter controls
+\item Asynchronous computation using future package for responsiveness
+\item Progress tracking and user feedback during long computations
+\item Result caching and session management
+}
+
+\strong{Interactive Visualizations:}
+\itemize{
+\item Plotly-based interactive scatter plots with zoom, pan, and selection
+\item Color mapping with automatic palette generation
+\item Linked brushing across multiple visualizations
+\item Responsive plot sizing and layout management
+\item Hover tooltips and selection feedback
+}
+
+\strong{Dynamic Tours:}
+\itemize{
+\item Integration with detourr package for animated projections
+\item Multiple display types: Scatter, Sage, and Slice projections
+\item 5-nearest neighbor graph construction and visualization
+\item Real-time parameter adjustment and tour customization
+\item Coordinated views between static and dynamic visualizations
+}
+
+\strong{Quality Assessment (Quollr Integration):}
+\itemize{
+\item Automated binwidth optimization using RMSE minimization
+\item Hexagonal binning and centroid extraction
+\item High-dimensional model fitting and validation
+\item Prediction error analysis and visualization
+\item 3D model tours using langevitour integration
+}
+
+\strong{Method Comparison:}
+\itemize{
+\item Side-by-side visualization comparison with linked brushing
+\item RMSE-based parameter optimization comparison
+\item Best configuration identification and reporting
+\item Interactive comparison plot generation
+}
+
+\strong{State Management:}
+\itemize{
+\item Reactive value system for maintaining application state
+\item Session-based data persistence and cleanup
+\item Asynchronous operation tracking and user feedback
+\item Memory management for large datasets
+}
+
+\strong{Parallel Processing:}
+The server automatically configures parallel processing:
+\itemize{
+\item Uses multicore on supported systems, multisession otherwise
+\item Configures 2 worker processes for optimal performance
+\item Proper cleanup on session end to prevent memory leaks
+\item Future-based asynchronous computation for UI responsiveness
+}
+}
+\note{
+This function requires several packages to be available:
+\itemize{
+\item \strong{Core}: shiny, magrittr
+\item \strong{Visualization}: plotly, ggplot2, DT, scales
+\item \strong{NLDR}: Rtsne, umap, FNN
+\item \strong{Quality}: quollr (with all its dependencies)
+\item \strong{Tours}: detourr, tourr
+\item \strong{Data}: dplyr, crosstalk
+\item \strong{Async}: future
+\item \strong{Utils}: stats, utils, tools
+}
+}
+\section{Reactive Values}{
+
+The server maintains several key reactive values:
+\itemize{
+\item \code{dataset}: Current active dataset
+\item \code{vis_results}: NLDR computation results
+\item \code{shared_vis_data}: Crosstalk-enabled data for linked brushing
+\item \code{nldr_datasets}: Storage for multiple NLDR results
+\item \code{optimal_config}: Best binwidth configuration from optimization
+\item \code{quollr_results}: Quality assessment results
+\item \code{color_palette}: Current color scheme for visualizations
+\item \code{is_running_*}: Boolean flags for operation status tracking
+}
+}
+
+\section{Error Handling}{
+
+Comprehensive error handling includes:
+\itemize{
+\item File upload validation with user-friendly error messages
+\item NLDR computation error catching with fallback options
+\item Memory management for large datasets
+\item Network timeout handling for async operations
+\item Graceful degradation when optional features are unavailable
+}
+}
+
+\section{Performance Considerations}{
+
+\itemize{
+\item Asynchronous computations prevent UI blocking
+\item Efficient data structures for large datasets
+\item Caching of expensive computations
+\item Memory cleanup and garbage collection
+\item Optimized reactive dependency management
+}
+}
+
+\examples{
+\dontrun{
+# Use in a complete Shiny application
+shinyApp(
+  ui = nldr_viz_ui(),
+  server = nldr_viz_server
+)
+
+# Test server logic (useful for development)
+testServer(nldr_viz_server, {
+  # Test reactive values and functionality
+  session$setInputs(example_data = "four_clusters")
+  expect_true(!is.null(dataset()))
+})
+}
+
+}
+\seealso{
+\itemize{
+\item \code{\link{nldr_viz_ui}} for the corresponding user interface
+\item \code{\link{run_nldr_viz}} for launching the complete application
+\item \code{\link{load_custom_datasets}} for data loading utilities
+\item \code{\link[shiny]{shinyServer}} for Shiny server function details
+\item \code{\link[future]{plan}} for parallel processing configuration
+}
+}
+\author{
+GSoC Contributor
+}
+\keyword{dimensionality-reduction}
+\keyword{reactive}
+\keyword{server}
+\keyword{shiny}
+\keyword{visualization}
