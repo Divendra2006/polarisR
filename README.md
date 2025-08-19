@@ -1,6 +1,6 @@
-# Polaris: Non-Linear Dimensionality Reduction Visualization Tool
+# polarisR: Non-Linear Dimensionality Reduction Visualization Tool
 
-Polaris is a Shiny application for visualizing high-dimensional data using non-linear dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an interactive platform to explore high-dimensional datasets, diagnose the quality of the embeddings using the `quollr` package, and compare different NLDR methods.
+`polarisR` is a Shiny application for visualizing high-dimensional data using non-linear dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an interactive platform to explore high-dimensional datasets, diagnose the quality of the embeddings using the `quollr` package, and compare different NLDR methods.
 
 ## Features
 
@@ -14,26 +14,26 @@ Polaris is a Shiny application for visualizing high-dimensional data using non-l
 
 ## Installation
 
-You can install Polaris from GitHub using the following commands in R:
+You can install polarisR from GitHub using the following commands in R:
 
 ```R
-# Install devtools if you haven't already
-# install.packages("devtools")
+# Install pak if you haven't already
+# install.packages("pak")
 
-devtools::install_github("https://github.com/Divendra2006/Polaris")
+pak::pak("Divendra2006/polarisR")
 ```
 
 ## Usage
 
-To run the Polaris Shiny app, use the following command in R:
+To run the polarisR Shiny app, use the following command in R:
 
 ```R
-Polaris::run_nldr_viz()
+polarisR::run_nldr_viz()
 ```
 
 ## Datasets
 
-Polaris comes with the following example datasets:
+polarisR comes with the following example datasets:
 
 - `four_clusters`: A simple dataset with four distinct clusters.
 - `pdfsense`: A dataset from high-energy physics, representing the space of parton distribution function fits.

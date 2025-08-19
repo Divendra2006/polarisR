@@ -136,7 +136,7 @@
 #' @keywords shiny ui interface visualization dimensionality-reduction
 nldr_viz_ui <- function() {
   bslib::page_navbar(
-    title = "Polaris",
+    title = "polarisR",
     theme = bslib::bs_theme(bootswatch = "lumen"),
     header = shiny::tags$head(
       shiny::tags$style(shiny::HTML("
