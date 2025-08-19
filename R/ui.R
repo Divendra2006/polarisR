@@ -4,9 +4,9 @@
 #' Bootstrap 5 styling with bslib. The UI provides an intuitive tabbed interface for
 #' data exploration, dimensionality reduction, quality assessment, and method comparison.
 #'
-#' @details 
+#' @details
 #' The user interface is organized into five main navigation panels:
-#' 
+#'
 #' **1. Dataset Preview Tab:**
 #' \itemize{
 #'   \item File upload widget for CSV datasets with validation
@@ -16,7 +16,7 @@
 #'   \item Dataset summary statistics (rows, columns, data types)
 #'   \item Storage and management of processed NLDR results
 #' }
-#' 
+#'
 #' **2. Dataset Visualization Tab:**
 #' \itemize{
 #'   \item Method selection: t-SNE or UMAP with parameter controls
@@ -27,7 +27,7 @@
 #'   \item Large interactive visualization plot (800px height)
 #'   \item Visualization information panel with method details
 #' }
-#' 
+#'
 #' **3. Dynamic Tour Tab:**
 #' \itemize{
 #'   \item Tour display types: Scatter, Sage, or Slice projections
@@ -36,7 +36,7 @@
 #'   \item Linked brushing functionality for interactive selection
 #'   \item Side-by-side layout: NLDR plot and dynamic tour visualization
 #' }
-#' 
+#'
 #' **4. Diagnosing Tab:**
 #' \itemize{
 #'   \item Automated binwidth optimization with RMSE-based selection
@@ -51,7 +51,7 @@
 #'     }
 #'   \item Configuration summary with optimal parameter display
 #' }
-#' 
+#'
 #' **5. Method Comparison Tab:**
 #' \itemize{
 #'   \item Two comparison modes: NLDR Settings Comparison and Side-by-Side Visualization
@@ -76,7 +76,7 @@
 #'   suitable for use in \code{\link[shiny]{shinyApp}} or as a module UI function.
 #'   The returned object contains all necessary HTML, CSS, and JavaScript dependencies.
 #'
-#' @note 
+#' @note
 #' The UI function automatically imports all required dependencies:
 #' \itemize{
 #'   \item \code{bslib} for modern Bootstrap 5 theming (Lumen theme)
@@ -104,7 +104,7 @@
 #'   \item Screen reader compatible structure and labeling
 #' }
 #'
-#' @seealso 
+#' @seealso
 #' \itemize{
 #'   \item \code{\link{nldr_viz_server}} for corresponding server logic
 #'   \item \code{\link{run_nldr_viz}} for launching the complete application
@@ -123,10 +123,10 @@
 #' \dontrun{
 #' # Create the UI object
 #' ui <- nldr_viz_ui()
-#' 
+#'
 #' # Use in a complete Shiny application
 #' shinyApp(ui = nldr_viz_ui(), server = nldr_viz_server)
-#' 
+#'
 #' # Integrate with custom theming
 #' ui_custom <- nldr_viz_ui()
 #' # The function returns a structure that can be further customized
@@ -136,7 +136,7 @@
 #' @keywords shiny ui interface visualization dimensionality-reduction
 nldr_viz_ui <- function() {
   bslib::page_navbar(
-    title = "NLDR Visualization Tool",
+    title = "Polaris",
     theme = bslib::bs_theme(bootswatch = "lumen"),
     header = shiny::tags$head(
       shiny::tags$style(shiny::HTML("
