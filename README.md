@@ -41,6 +41,10 @@ Polaris comes with the following example datasets:
 
 You can also upload your own dataset in CSV format.
 
+## About the name
+
+**p**rojective **o**utput **l**ayouts **a**nd **r**educed **i**nteractive **s**urfaces in **R**
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
