@@ -28,7 +28,7 @@ each generated using different shapes and scales. It is ideal for demonstrating
 clustering algorithms and visualization techniques.
 }
 \details{
-The dataset was generated using the \code{\link{gen_multicluster}} function from the
+The dataset was generated using the \code{\link[cardinalR]{gen_multicluster}} function from the
 \code{cardinalR} package, with the following parameters:
 \itemize{
 \item \code{n = c(300, 250, 650, 800)}: Number of points per cluster
@@ -41,6 +41,8 @@ The dataset was generated using the \code{\link{gen_multicluster}} function from
 }
 \examples{
 data(four_clusters)
-plot(four_clusters[, 1], four_clusters[, 2], col=four_clusters$cluster, pch=19)
+plot(four_clusters$x1, four_clusters$x2, 
+     col=as.numeric(four_clusters$cluster), pch=19,
+     main="Four Clusters Dataset", xlab="x1", ylab="x2")
 }
 \keyword{datasets}

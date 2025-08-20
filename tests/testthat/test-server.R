@@ -1,6 +1,6 @@
 library(shiny)
 library(testthat)
-library(Polaris)
+library(polarisR)
 
 test_that("check_empty_cells function works correctly", {
   check_empty_cells <- function(data) {

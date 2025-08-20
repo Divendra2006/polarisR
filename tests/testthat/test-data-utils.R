@@ -1,4 +1,4 @@
-library(Polaris)
+library(polarisR)
 
 test_that("load_custom_datasets returns valid datasets", {
   datasets <- load_custom_datasets()

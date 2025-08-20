@@ -1,4 +1,4 @@
-library(Polaris)
+library(polarisR)
 
 test_that("run_nldr_viz creates a Shiny app", {
   expect_true(exists("run_nldr_viz"))
@@ -87,9 +87,9 @@ test_that("app UI and server are properly integrated", {
 })
 
 test_that("package namespace is properly configured", {
-  expect_true("Polaris" %in% loadedNamespaces())
+  expect_true("polarisR" %in% loadedNamespaces())
   
-  exported_functions <- getNamespaceExports("Polaris")
+  exported_functions <- getNamespaceExports("polarisR")
   expect_true("run_nldr_viz" %in% exported_functions)
   expect_true("nldr_viz_ui" %in% exported_functions)
   expect_true("nldr_viz_server" %in% exported_functions)

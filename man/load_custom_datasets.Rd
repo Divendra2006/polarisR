@@ -21,7 +21,7 @@ if no datasets can be loaded.
 }
 \description{
 Loads and returns a named list of built-in example datasets that are included
-with the Polaris package. These datasets are specifically chosen to demonstrate
+with the polarisR package. These datasets are specifically chosen to demonstrate
 different characteristics and challenges in non-linear dimensionality reduction
 analysis and visualization.
 }
@@ -57,7 +57,7 @@ This function attempts to load three key datasets from the package:
 }
 \note{
 The function uses \code{\link[utils]{data}} to load datasets from the package
-namespace. If the Polaris package is not properly installed or the data files
+namespace. If the polarisR package is not properly installed or the data files
 are missing, warnings will be generated for the affected datasets.
 }
 \section{Error Handling}{

@@ -1,25 +1,25 @@
 test_that("package datasets are accessible", {
-  expect_no_error(data("four_clusters", package = "Polaris"))
-  expect_no_error(data("pdfsense", package = "Polaris"))
-  expect_no_error(data("fake_trees", package = "Polaris"))
+  expect_no_error(data("four_clusters", package = "polarisR"))
+  expect_no_error(data("pdfsense", package = "polarisR"))
+  expect_no_error(data("fake_trees", package = "polarisR"))
   
-  data("four_clusters", package = "Polaris")
+  data("four_clusters", package = "polarisR")
   expect_true(exists("four_clusters"))
   expect_s3_class(four_clusters, "data.frame")
   
-  data("pdfsense", package = "Polaris")
+  data("pdfsense", package = "polarisR")
   expect_true(exists("pdfsense"))
   expect_s3_class(pdfsense, "data.frame")
   
-  data("fake_trees", package = "Polaris")
+  data("fake_trees", package = "polarisR")
   expect_true(exists("fake_trees"))
   expect_s3_class(fake_trees, "data.frame")
 })
 
 test_that("dataset characteristics are appropriate for NLDR", {
-  data("four_clusters", package = "Polaris")
-  data("pdfsense", package = "Polaris")
-  data("fake_trees", package = "Polaris")
+  data("four_clusters", package = "polarisR")
+  data("pdfsense", package = "polarisR")
+  data("fake_trees", package = "polarisR")
   
   expect_true("cluster" %in% names(four_clusters))
   expect_gt(length(unique(four_clusters$cluster)), 1)
@@ -42,7 +42,7 @@ test_that("dataset characteristics are appropriate for NLDR", {
 })
 
 test_that("data transformations preserve structure", {
-  data("four_clusters", package = "Polaris")
+  data("four_clusters", package = "polarisR")
   
   original_nrow <- nrow(four_clusters)
   original_ncol <- ncol(four_clusters)
@@ -63,7 +63,7 @@ test_that("load_custom_datasets integrates with package data", {
   expect_true("pdfsense" %in% names(custom_datasets))
   expect_true("trees" %in% names(custom_datasets))
   
-  data("four_clusters", package = "Polaris")
+  data("four_clusters", package = "polarisR")
   expect_equal(nrow(custom_datasets$four_clusters), nrow(four_clusters))
   expect_equal(ncol(custom_datasets$four_clusters), ncol(four_clusters))
 })

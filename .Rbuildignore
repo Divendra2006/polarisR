@@ -1,4 +1,4 @@
-^Polaris\.Rproj$
+^polarisR\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^\.git$
@@ -8,4 +8,4 @@
 ^data-raw$
 ^.*\.Rcheck$
 ^\.\.Rcheck$
-^Polaris_.*\.tar\.gz$
+^polarisR_.*\.tar\.gz$

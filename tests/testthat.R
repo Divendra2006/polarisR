@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(Polaris)
+library(polarisR)
 
-test_check("Polaris")
+test_check("polarisR")
