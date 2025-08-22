@@ -567,9 +567,9 @@ nldr_viz_server <- function(input, output, session) {
           nldr_counter(id)
           active_nldr_id(as.character(id))
           method_settings <- if (method == "t-SNE") {
-            paste0(current_dataset_name(), " - t-SNE (p=", result$perplexity, ")")
+            paste0(current_dataset_name(), " - t-SNE (p=", result$perplexity, ", iter=", result$max_iter, ")")
           } else {
-            paste0(current_dataset_name(), " - UMAP (n=", result$n_neighbors, ")")
+            paste0(current_dataset_name(), " - UMAP (n=", result$n_neighbors, ", d=", result$min_dist, ")")
           }
           current <- nldr_datasets()
           current[[as.character(id)]] <- list(
