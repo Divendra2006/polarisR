@@ -200,7 +200,6 @@ nldr_viz_server <- function(input, output, session) {
 
   quollr_model <- shiny::reactiveVal(NULL)
   quollr_results <- shiny::reactiveVal(NULL)
-  show_langevitour_flag <- shiny::reactiveVal(FALSE)
   is_running_visualization <- shiny::reactiveVal(FALSE)
   is_running_binwidth_optimization <- shiny::reactiveVal(FALSE)
   is_running_quollr_analysis <- shiny::reactiveVal(FALSE)
@@ -587,7 +586,6 @@ nldr_viz_server <- function(input, output, session) {
 
         quollr_results(NULL)
         optimal_config(NULL)
-        show_langevitour_flag(FALSE)
         is_running_visualization(FALSE)
         shiny::showNotification("Visualization completed successfully!", type = "message")
       },
@@ -639,23 +637,10 @@ nldr_viz_server <- function(input, output, session) {
     detourr::displayScatter2dOutput("tour_plot_2d", height = "580px")
   })
 
-  tour_edges <- shiny::reactive({
-    shiny::req(input$show_edges, shared_vis_data())
-    data <- shared_vis_data()$data()
-    projection_cols <- setdiff(names(data), c("x", "y", "color"))
-
-    if (nrow(data) < 2 || length(projection_cols) < 1) {
-      return(NULL)
-    }
-
-    knn <- FNN::get.knn(data[, projection_cols, drop = FALSE], k = 5)
-    from <- rep(1:nrow(data), 5)
-    to <- as.vector(t(knn$nn.index))
-    cbind(from, to)
-  })
+  
 
   tour_object <- shiny::reactive({
-    shiny::req(shared_vis_data(), input$tour_display_type, !is.null(input$tour_axes), !is.null(input$show_edges), color_palette())
+    shiny::req(shared_vis_data(), input$tour_display_type, !is.null(input$tour_axes), color_palette())
     
     brushing_enabled <- input$enable_brushing
     
@@ -687,20 +672,18 @@ nldr_viz_server <- function(input, output, session) {
     ) |>
       detourr::tour_path(tourr::grand_tour(2L), fps = 30)
 
-    current_edges <- if (isTRUE(input$show_edges)) tour_edges() else NULL
-
     switch(input$tour_display_type,
       "Scatter" = {
         shiny::req(input$tour_alpha)
-        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1, edges = current_edges)
+        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1)
       },
       "Sage" = {
         shiny::req(input$tour_gamma)
-        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1, edges = current_edges)
+        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1)
       },
       "Slice" = {
         shiny::req(input$tour_slice_volume)
-        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1, edges = current_edges)
+        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1)
       }
     )
   })
@@ -856,7 +839,6 @@ nldr_viz_server <- function(input, output, session) {
             )
           )
 
-          show_langevitour_flag(FALSE)
         })
 
         is_running_quollr_analysis(FALSE)
@@ -1051,28 +1033,7 @@ nldr_viz_server <- function(input, output, session) {
       plotly::config(displayModeBar = TRUE, displaylogo = FALSE)
   })
 
-  shiny::observeEvent(input$show_langevitour, {
-    shiny::req(quollr_results())
-    show_langevitour_flag(TRUE)
-  })
-  output$show_langevitour_ui <- shiny::reactive({
-    show_langevitour_flag()
-  })
-  shiny::outputOptions(output, "show_langevitour_ui", suspendWhenHidden = FALSE)
-
-  output$langevitour_output <- shiny::renderUI({
-    shiny::req(show_langevitour_flag(), quollr_results())
-    results <- quollr_results()
-    tour_data <- quollr::comb_data_model(
-      highd_data  = results$highd_data,
-      model_highd = results$model_highd,
-      model_2d    = results$model_2d
-    )
-    quollr::show_langevitour(
-      point_data = tour_data,
-      edge_data  = results$trimesh_data
-    )
-  })
+  
 
   output$optimal_binwidth_summary <- shiny::renderPrint({
     shiny::req(optimal_config())

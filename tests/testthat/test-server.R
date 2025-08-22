@@ -82,7 +82,6 @@ test_that("server initializes with correct reactive values", {
     expect_true(is.reactive(active_nldr_id))
     expect_true(is.reactive(quollr_model))
     expect_true(is.reactive(quollr_results))
-    expect_true(is.reactive(show_langevitour_flag))
     session$setInputs(example_data = "four_clusters")
     expect_true(!is.null(dataset()))
     expect_true(is.data.frame(dataset()))
@@ -337,14 +336,12 @@ test_that("tour functionality parameters work correctly", {
       tour_alpha = 0.8,
       tour_gamma = 1.5,
       tour_slice_volume = 0.15,
-      tour_axes = TRUE,
-      show_edges = TRUE
+      tour_axes = TRUE
     )
     expect_equal(input$tour_alpha, 0.8)
     expect_equal(input$tour_gamma, 1.5)
     expect_equal(input$tour_slice_volume, 0.15)
     expect_true(input$tour_axes)
-    expect_true(input$show_edges)
   })
 })
 
@@ -839,37 +836,6 @@ test_that("Quollr analysis executes correctly", {
   })
 })
 
-test_that("langevitour functionality works correctly", {
-  skip_if_not_installed("quollr")
-  shiny::testServer(nldr_viz_server, {
-    mock_quollr_results <- list(
-      highd_data = data.frame(
-        x1 = rnorm(40), x2 = rnorm(40), x3 = rnorm(40)
-      ),
-      model_2d = data.frame(
-        h = 1:8, c1 = rnorm(8), c2 = rnorm(8)
-      ),
-      model_highd = data.frame(
-        h = rep(1:8, each = 3),
-        x1 = rnorm(24), x2 = rnorm(24), x3 = rnorm(24)
-      ),
-      trimesh_data = data.frame(
-        from = sample(1:8, 20, replace = TRUE),
-        to = sample(1:8, 20, replace = TRUE),
-        x = rnorm(20), y = rnorm(20), z = rnorm(20)
-      )
-    )
-    quollr_results(mock_quollr_results)
-    expect_false(show_langevitour_flag())
-    session$setInputs(show_langevitour = 1)
-    show_langevitour_flag(TRUE)
-    expect_true(show_langevitour_flag())
-    results <- quollr_results()
-    expect_equal(nrow(results$model_2d), 8)
-    expect_equal(ncol(results$highd_data), 3)
-    expect_true(all(c("from", "to") %in% names(results$trimesh_data)))
-  })
-})
 
 test_that("comparison functionality works correctly", {
   shiny::testServer(nldr_viz_server, {

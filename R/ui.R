@@ -151,6 +151,13 @@ nldr_viz_ui <- function() {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        .nav-tabs {
+          width: 100%;
+        }
+        .nav-tabs .nav-item {
+          flex-grow: 1;
+          text-align: center;
+        }
       "))
     ),
 
@@ -285,7 +292,6 @@ nldr_viz_ui <- function() {
             ),
             shiny::hr(),
             shiny::checkboxInput("tour_axes", "Show Axes", value = FALSE),
-            shiny::checkboxInput("show_edges", "Show Edges (5-NN Graph)", value = FALSE),
             shiny::hr(),
             shiny::conditionalPanel(
               condition = "input.tour_display_type == 'Scatter'",
@@ -376,7 +382,7 @@ nldr_viz_ui <- function() {
                   )
                 )
               ),
-              shiny::actionButton("show_langevitour", "Show 3D Tour", class = "btn-secondary w-100")
+              
             )
           )
         ),
@@ -410,26 +416,7 @@ nldr_viz_ui <- function() {
                       plotly::plotlyOutput("quollr_fit_plot", height = "500px")
                     )
                   ),
-                  shiny::tabPanel(
-                    "High-Dimensional Model Tour",
-                    shiny::div(
-                      style = "margin-top: 1rem;",
-                      shiny::conditionalPanel(
-                        condition = "output.show_langevitour_ui",
-                        shiny::uiOutput("langevitour_output")
-                      ),
-                      shiny::conditionalPanel(
-                        condition = "!output.show_langevitour_ui",
-                        shiny::div(
-                          class = "text-center p-5",
-                          style = "border: 2px dashed #ccc; border-radius: 8px; color: #666; background-color: #f9f9f9; height: 500px; display: flex; flex-direction: column; justify-content: center; align-items: center;",
-                          shiny::icon("film", "fa-3x"),
-                          shiny::h5("3D Model Tour", class = "mt-3"),
-                          shiny::p("Click 'Show 3D Tour' in the sidebar to generate the interactive model tour.")
-                        )
-                      )
-                    )
-                  )
+                  
                 )
               )
             )
