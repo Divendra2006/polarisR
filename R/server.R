@@ -408,7 +408,10 @@ nldr_viz_server <- function(input, output, session) {
 
   output$data_preview <- DT::renderDT({
     shiny::req(dataset())
-    DT::datatable(dataset(), options = list(scrollX = TRUE, pageLength = 10))
+    data <- dataset()
+    numeric_cols <- sapply(data, is.numeric)
+    data[numeric_cols] <- lapply(data[numeric_cols], function(x) round(x, 3))
+    DT::datatable(data, options = list(scrollX = TRUE, pageLength = 10))
   })
 
   output$data_info <- shiny::renderTable({
@@ -952,6 +955,8 @@ nldr_viz_server <- function(input, output, session) {
     current_key <- names(nldr_datasets())[length(nldr_datasets())]
     results_for_plot <- all_results[[current_key]]
     shiny::req(results_for_plot)
+    numeric_cols <- sapply(results_for_plot, is.numeric)
+    results_for_plot[numeric_cols] <- lapply(results_for_plot[numeric_cols], function(x) round(x, 3))
     DT::datatable(results_for_plot, options = list(pageLength = 10, scrollX = TRUE), rownames = FALSE)
   })
 
