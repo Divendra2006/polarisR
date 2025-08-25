@@ -206,13 +206,13 @@ nldr_viz_ui <- function() {
     bslib::nav_spacer(),
 
     bslib::nav_panel(
-      title = "Dataset Visualization",
+      title = "Non-linear dimension reduction (NLDR)",
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           width = 300,
           gap = "3rem",
           bslib::card(
-            bslib::card_header("Visualization Options"),
+            bslib::card_header("NLDR Choices"),
             shiny::radioButtons("nldr_method", "Choose Method:",
               choices = c("t-SNE", "UMAP"),
               selected = "t-SNE"
@@ -252,7 +252,7 @@ nldr_viz_ui <- function() {
           shiny::div(
             shiny::conditionalPanel(
               condition = "!output.visualization_button_disabled",
-              shiny::actionButton("run_visualization", "Run Visualization", class = "btn-success w-100")
+              shiny::actionButton("run_visualization", "Generate 2-D Layout", class = "btn-success w-100")
             ),
             shiny::conditionalPanel(
               condition = "output.visualization_button_disabled",
@@ -267,11 +267,11 @@ nldr_viz_ui <- function() {
         bslib::layout_columns(
           col_widths = c(8, 4),
           bslib::card(
-            bslib::card_header("Visualization"),
+            bslib::card_header("2-D Layout"),
             plotly::plotlyOutput("nldr_plot", height = "800px", width = "100%")
           ),
           bslib::card(
-            bslib::card_header("Visualization Information"),
+            bslib::card_header("NLDR Information"),
             shiny::verbatimTextOutput("vis_info")
           )
         )
@@ -319,7 +319,7 @@ nldr_viz_ui <- function() {
           col_widths = c(6, 6),
           height = "700px",
           bslib::card(
-            bslib::card_header("NLDR Visualization"),
+            bslib::card_header("2-D Layout"),
             bslib::card_body(
               padding = "0.5rem",
               plotly::plotlyOutput("nldr_plot_tour_tab", height = "600px")
@@ -382,7 +382,7 @@ nldr_viz_ui <- function() {
                   )
                 )
               ),
-              
+
             )
           )
         ),
@@ -403,20 +403,20 @@ nldr_viz_ui <- function() {
                     )
                   ),
                   shiny::tabPanel(
-                    "Optimization Table",
+                    "Model Summary",
                     shiny::div(
                       class = "my-5",
                       DT::DTOutput("binwidth_results_table")
                     )
                   ),
                   shiny::tabPanel(
-                    "Model Fit",
+                    "Model Error",
                     shiny::div(
                       class = "my-5",
                       plotly::plotlyOutput("quollr_fit_plot", height = "500px")
                     )
                   ),
-                  
+
                 )
               )
             )
@@ -437,7 +437,7 @@ nldr_viz_ui <- function() {
     bslib::nav_spacer(),
 
     bslib::nav_panel(
-      title = "Method Comparison",
+      title = "2-D Layout Comparison",
       bslib::layout_sidebar(
         sidebar = bslib::sidebar(
           width = 300,
@@ -511,13 +511,13 @@ nldr_viz_ui <- function() {
             col_widths = c(8, 4),
             gap = "20px",
             bslib::card(
-              bslib::card_header("RMSE Comparison Plot"),
+              bslib::card_header("RMSE Plot To Compare Multiple Layouts"),
               bslib::card_body(
                 plotly::plotlyOutput("comparison_mse_plot", height = "550px")
               )
             ),
             bslib::card(
-              bslib::card_header("Best Configuration Summary"),
+              bslib::card_header("Best Layout Summary"),
               bslib::card_body(
                 style = "padding-top: 1.25rem;",
                 shiny::verbatimTextOutput("best_configuration_summary")
