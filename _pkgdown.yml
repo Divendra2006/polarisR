@@ -2,6 +2,8 @@ url: https://divendra2006.github.io/polarisR/
 template:
   bootstrap: 5
   bootswatch: sandstone
+
+logo: ~
   
 home:
   title: "polarisR: Non-Linear Dimensionality Reduction Visualization Tool"
@@ -10,9 +12,13 @@ home:
     dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an
     interactive platform to explore high-dimensional datasets, diagnose the quality of
     the embeddings using the quollr package, and compare different NLDR methods.
+  links:
+  - text: Browse source code
+    href: https://github.com/Divendra2006/polarisR
 
 navbar:
   title: "polarisR"
+  type: default
   left:
     - icon: fa-home fa-lg
       href: index.html

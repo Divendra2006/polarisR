@@ -74,8 +74,6 @@ img {
 }
 ```
 
-<img src="../man/figures/logo.png" align="right" height="80" style="border:0;" />
-
 ## Introduction
 
 Welcome to the `polarisR` vignette. This document provides a comprehensive guide to using the `polarisR` interactive application for non-linear dimension reduction (NLDR) analysis. We will walk through each tab of the application, explaining the features and functionalities available to help you explore and understand your high-dimensional data.
