@@ -38,10 +38,10 @@ test_that("nldr_viz_ui creates valid UI", {
   expect_true(nchar(ui_html) > 100)
   
   expect_true(grepl("Dataset Preview", ui_html))
-  expect_true(grepl("Dataset Visualization", ui_html))
+  expect_true(grepl("Non-linear dimension reduction \\(NLDR\\)", ui_html))
   expect_true(grepl("Dynamic Tour", ui_html))
   expect_true(grepl("Diagnosing", ui_html))
-  expect_true(grepl("Method Comparison", ui_html))
+  expect_true(grepl("2-D Layout Comparison", ui_html))
 })
 
 test_that("UI contains required input elements", {
