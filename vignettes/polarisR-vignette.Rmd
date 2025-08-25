@@ -123,10 +123,10 @@ This will open the interactive Shiny application in your default web browser.
 The polarisR interface is organized into **five main tabs**, each designed for specific aspects of your data analysis workflow:
 
 1. **Dataset Preview** - Load and explore your data, select columns, and manage datasets
-2. **Dataset Visualization** - Apply NLDR methods (t-SNE/UMAP) with parameter configuration and visualization
+2. **Non-linear dimension reduction (NLDR)** - Apply NLDR methods (t-SNE/UMAP) with parameter configuration and visualization
 3. **Dynamic Tour** - Explore high-dimensional structure through animated projections  
 4. **Diagnosing** - Assess embedding quality using quantitative methods
-5. **Method Comparison** - Compare different NLDR configurations and results
+5. **2-D Layout Comparison** - Compare different NLDR configurations and results
 
 Each tab builds upon the previous ones, creating a comprehensive workflow from data loading to advanced comparative analysis. Let's explore each tab in detail.
 
@@ -166,9 +166,9 @@ data(fake_trees, package = "polarisR")
 *   **Dataset Information:** This section provides a summary of your dataset, including the number of rows, columns, and the types of columns (numeric or categorical).
 *   **NLDR Datasets:** As you run different NLDR analyses, the results will be stored and listed here. You can easily switch between different results to compare them.
 
-## Dataset Visualization Tab
+## Non-linear dimension reduction (NLDR) Tab
 
-The **Dataset Visualization** tab is where the main NLDR analysis happens. You can choose between t-SNE and UMAP, configure their parameters, and visualize the results.
+The **Non-linear dimension reduction (NLDR)** tab is where the main NLDR analysis happens. You can choose between t-SNE and UMAP, configure their parameters, and visualize the results.
 
 <img src="../man/figures/dataset-visualization.png" alt="Dataset Visualization Tab" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
 
@@ -201,6 +201,7 @@ The **Dynamic Tour** tab offers an interactive way to explore the high-dimension
     *   **Slice:** A plot that shows a slice of the high-dimensional space.
 *   **Tour Options:**
     *   **Show Axes:** Toggle the visibility of the axes in the tour plot.
+    *   **Show Wireframe:** Toggle the visibility of wireframe edges in the tour plot for enhanced structural visualization.
     *   **Point Opacity (Alpha):** Adjust the transparency of the points.
     *   **Gamma (for Sage):** Control the smoothing parameter for the sage plot.
     *   **Slice Relative Volume (for Slice):** Adjust the thickness of the slice.
@@ -217,15 +218,15 @@ The **Diagnosing** tab provides tools to assess the quality of your NLDR embeddi
 *   **Analysis Results:** The results of the analysis are presented in several tabs:
     *   **RMSE vs Binwidth:** An interactive plot showing the RMSE for different binwidth values.
     <img src="../man/figures/rmse-vs-binwidth.png" alt="RMSE vs Binwidth" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
-    *   **Optimization Table:** A table with the detailed results of the binwidth optimization.
+    *   **Model Summary:** A table with the detailed results of the binwidth optimization.
     <img src="../man/figures/optimization-table.png" alt="Optimization Table" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
-    *   **Model Fit:** A visualization that shows the quality of the model fit, highlighting areas of high and low prediction error.
+    *   **Model Error:** A visualization that shows the quality of the model fit, highlighting areas of high and low prediction error.
     <img src="../man/figures/model-fit.png" alt="Model Fit" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
 *   **Configuration & Summary:** This section displays the optimal binwidth configuration and a summary of the `quollr` model fit.
 
-## Method Comparison Tab
+## 2-D Layout Comparison Tab
 
-The **Method Comparison** tab allows you to compare the results of different NLDR analyses. You can compare different methods (t-SNE vs. UMAP) or the same method with different parameters.
+The **2-D Layout Comparison** tab allows you to compare the results of different NLDR analyses. You can compare different methods (t-SNE vs. UMAP) or the same method with different parameters.
 
 
 ### Features:
