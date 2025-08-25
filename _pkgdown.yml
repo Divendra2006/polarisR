@@ -2,8 +2,6 @@ url: https://divendra2006.github.io/polarisR/
 template:
   bootstrap: 5
   bootswatch: sandstone
-
-logo: ~
   
 home:
   title: "polarisR: Non-Linear Dimensionality Reduction Visualization Tool"
