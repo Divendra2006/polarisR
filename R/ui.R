@@ -292,6 +292,7 @@ nldr_viz_ui <- function() {
             ),
             shiny::hr(),
             shiny::checkboxInput("tour_axes", "Show Axes", value = FALSE),
+            shiny::checkboxInput("show_wireframe", "Show Wireframe", value = FALSE),
             shiny::hr(),
             shiny::conditionalPanel(
               condition = "input.tour_display_type == 'Scatter'",

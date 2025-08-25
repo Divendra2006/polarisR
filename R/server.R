@@ -675,18 +675,28 @@ nldr_viz_server <- function(input, output, session) {
     ) |>
       detourr::tour_path(tourr::grand_tour(2L), fps = 30)
 
+    edges_data <- NULL
+    if (isTRUE(input$show_wireframe)) {
+      quollr_res <- quollr_results()
+      if (is.null(quollr_res) || is.null(quollr_res$trimesh_data)) {
+        shiny::showNotification("Please run Quollr analysis first to generate the wireframe.", type = "warning")
+      } else {
+        edges_data <- as.matrix(quollr_res$trimesh_data[, 1:2])
+      }
+    }
+
     switch(input$tour_display_type,
       "Scatter" = {
         shiny::req(input$tour_alpha)
-        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1)
+        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data)
       },
       "Sage" = {
         shiny::req(input$tour_gamma)
-        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1)
+        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data)
       },
       "Slice" = {
         shiny::req(input$tour_slice_volume)
-        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1)
+        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data)
       }
     )
   })
