@@ -13,7 +13,8 @@ Description: A Shiny application for visualizing high-dimensional data using non
     interactive platform to explore high-dimensional datasets, diagnose the quality of
     the embeddings using the quollr package, and compare different NLDR methods.
 License: MIT + file LICENSE
-URL: https://github.com/Divendra2006/polarisR
+URL: https://github.com/Divendra2006/polarisR,
+    https://divendra2006.github.io/polarisR/
 BugReports: https://github.com/Divendra2006/polarisR/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -41,7 +42,8 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    pkgdown
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Depends: 

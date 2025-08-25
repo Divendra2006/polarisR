@@ -1,0 +1,69 @@
+url: https://divendra2006.github.io/polarisR/
+template:
+  bootstrap: 5
+  bootswatch: sandstone
+  
+home:
+  title: "polarisR: Non-Linear Dimensionality Reduction Visualization Tool"
+  description: >
+    A Shiny application for visualizing high-dimensional data using non-linear
+    dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an
+    interactive platform to explore high-dimensional datasets, diagnose the quality of
+    the embeddings using the quollr package, and compare different NLDR methods.
+
+navbar:
+  title: "polarisR"
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: "Get started"
+      href: articles/polarisR-vignette.html
+    - text: "Reference"
+      href: reference/index.html
+    - text: "Articles"
+      menu:
+      - text: "Introduction to polarisR"
+        href: articles/polarisR-vignette.html
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/Divendra2006/polarisR
+
+reference:
+  - title: "Main Functions"
+    desc: "Core functions to run the application"
+    contents:
+    - run_nldr_viz
+    - nldr_viz_ui
+    - nldr_viz_server
+    
+  - title: "Data Functions" 
+    desc: "Functions for loading and managing datasets"
+    contents:
+    - load_custom_datasets
+    
+  - title: "Example Datasets"
+    desc: "Built-in datasets for exploration"
+    contents:
+    - four_clusters
+    - pdfsense
+    - fake_trees
+
+articles:
+  - title: "Getting Started"
+    navbar: ~
+    contents:
+    - polarisR-vignette
+
+authors:
+  Divendra Yadav:
+    href: https://github.com/Divendra2006
+  Ursula Laa:
+    href: https://orcid.org/0000-0002-0249-6439
+  "Jayani P. Gamage":
+    href: https://orcid.org/0000-0002-6265-6481
+  Eun-Kyung Lee: {}
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

@@ -9,3 +9,7 @@
 ^.*\.Rcheck$
 ^\.\.Rcheck$
 ^polarisR_.*\.tar\.gz$
+^_pkgdown\.yml$
+^docs$
+^\.github$
+^DEPLOYMENT\.md$
