@@ -13,3 +13,5 @@
 ^docs$
 ^\.github$
 ^pkgdown$
+^dev$
+^cran-comments\.md$

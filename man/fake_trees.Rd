@@ -14,9 +14,6 @@ An object of class \code{data.frame} with 3000 rows and 101 columns.
 fake_trees
 }
 \description{
-A high-dimensional tree data structure with 10 branching points.
-}
-\details{
 Data are obtained from diffusion limited aggregation
 tree simulation in the \code{phate} python and \code{phateR} packages, but
 reconstructed as a wide data.frame rather than a list.

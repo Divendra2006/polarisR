@@ -2,23 +2,24 @@ Package: polarisR
 Title: Non-Linear Dimensionality Reduction Visualization Tool
 Version: 0.1.0
 Authors@R: c(
-    person("Divendra", "Yadav", email = "divendrasinghyadaviit@gmail.com", role = c("aut", "cre")),
-    person("Ursula", "Laa", email = "ursula.laa@boku.ac.at", role = "aut",
+    person("Divendra", "Yadav", , "divendrasinghyadaviit@gmail.com", role = c("aut", "cre")),
+    person("Ursula", "Laa", , "ursula.laa@boku.ac.at", role = "aut",
            comment = c(ORCID = "0000-0002-0249-6439")),
-    person("Jayani P.", "Gamage", email = "jayanilakshika76@gmail.com", role = "aut",
+    person("Jayani P.", "Gamage", , "jayanilakshika76@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0002-6265-6481")),
-    person("Eun-Kyung", "Lee", email = "lee.eunk@gmail.com", role = "aut"))
-Description: A Shiny application for visualizing high-dimensional data using non-linear
-    dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an
-    interactive platform to explore high-dimensional datasets, diagnose the quality of
-    the embeddings using the quollr package, and compare different NLDR methods.
+    person("Eun-Kyung", "Lee", , "lee.eunk@gmail.com", role = "aut")
+  )
+Description: A Shiny application for visualizing high-dimensional data
+    using non-linear dimensionality reduction (NLDR) techniques such as
+    t-SNE and UMAP. It provides an interactive platform to explore
+    high-dimensional datasets, diagnose the quality of the embeddings
+    using the quollr package, and compare different NLDR methods.
 License: MIT + file LICENSE
 URL: https://github.com/Divendra2006/polarisR,
     https://divendra2006.github.io/polarisR/
 BugReports: https://github.com/Divendra2006/polarisR/issues
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+Depends: 
+    R (>= 4.1.0)
 Imports: 
     bslib,
     crosstalk,
@@ -26,6 +27,7 @@ Imports:
     dplyr,
     DT,
     FNN,
+    future,
     ggplot2,
     magrittr,
     plotly,
@@ -33,19 +35,21 @@ Imports:
     Rtsne,
     scales,
     shiny,
+    stats,
     tools,
     tourr,
     umap,
-    future,
-    stats,
     utils
 Suggests:
-    testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    pkgdown
-VignetteBuilder: knitr
+    spelling,
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
 Config/testthat/edition: 3
-Depends: 
-    R (>= 4.1.0)
+Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Language: en-US

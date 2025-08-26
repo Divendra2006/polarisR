@@ -3,9 +3,7 @@
 \docType{data}
 \name{four_clusters}
 \alias{four_clusters}
-\title{This dataset (\code{four_clusters}) contains simulated data with four distinct clusters,
-each generated using different shapes and scales. It is ideal for demonstrating
-clustering algorithms and visualization techniques.}
+\title{Four Clusters Simulated Dataset}
 \format{
 A data frame with 2000 rows and 4 variables:
 \describe{
@@ -28,6 +26,8 @@ each generated using different shapes and scales. It is ideal for demonstrating
 clustering algorithms and visualization techniques.
 }
 \details{
+Four Clusters Simulated Dataset
+
 The dataset was generated using the \code{\link[cardinalR]{gen_multicluster}} function from the
 \code{cardinalR} package, with the following parameters:
 \itemize{
@@ -41,7 +41,7 @@ The dataset was generated using the \code{\link[cardinalR]{gen_multicluster}} fu
 }
 \examples{
 data(four_clusters)
-plot(four_clusters$x1, four_clusters$x2, 
+plot(four_clusters$x1, four_clusters$x2,
      col=as.numeric(four_clusters$cluster), pch=19,
      main="Four Clusters Dataset", xlab="x1", ylab="x2")
 }

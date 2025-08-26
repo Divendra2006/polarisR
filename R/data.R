@@ -36,7 +36,7 @@
 
 #' A high-dimensional tree data structure with 10 branching points.
 #'
-#' @details Data are obtained from diffusion limited aggregation
+#' @description Data are obtained from diffusion limited aggregation
 #' tree simulation in the `phate` python and `phateR` packages, but
 #' reconstructed as a wide data.frame rather than a list.
 #'
@@ -48,7 +48,10 @@
 "fake_trees"
 
 
-#' This dataset (`four_clusters`) contains simulated data with four distinct clusters,
+#' Four Clusters Simulated Dataset
+#'
+#' @title Four Clusters Simulated Dataset
+#' @description This dataset (`four_clusters`) contains simulated data with four distinct clusters,
 #' each generated using different shapes and scales. It is ideal for demonstrating
 #' clustering algorithms and visualization techniques.
 #'
@@ -77,7 +80,7 @@
 #'
 #' @examples
 #' data(four_clusters)
-#' plot(four_clusters$x1, four_clusters$x2, 
+#' plot(four_clusters$x1, four_clusters$x2,
 #'      col=as.numeric(four_clusters$cluster), pch=19,
 #'      main="Four Clusters Dataset", xlab="x1", ylab="x2")
 "four_clusters"
