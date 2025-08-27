@@ -22,6 +22,20 @@ You can install polarisR from GitHub using the following commands in R:
 
 pak::pak("Divendra2006/polarisR")
 ```
+### Temporary Installation (for Edge Formatting)
+
+To temporarily access and test new features, such as custom edge thickness and color, you can install a specific development branch. This method is intended for testing purposes before features are merged into the main package.
+
+```R
+# Install remotes if you haven't already
+# install.packages("remotes")
+
+# 1. Install the required 'detourr' dependency from its development branch
+remotes::install_github("casperhart/detourr", ref = "edge-thickness-and-colour")
+
+# 2. Install the temporary development branch of polarisR
+remotes::install_github("Divendra2006/polarisR", ref = "development")
+```
 
 ## Usage
 
