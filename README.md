@@ -35,9 +35,9 @@ polarisR::run_nldr_viz()
 
 polarisR comes with the following example datasets:
 
-- `four_clusters`: A simple dataset with four distinct clusters.
-- `pdfsense`: A dataset from high-energy physics, representing the space of parton distribution function fits.
-- `trees`: A high-dimensional tree data structure with 10 branching points.
+- `four_clusters`
+- `pdfsense`
+- `trees`
 
 You can also upload your own dataset in CSV format.
 
