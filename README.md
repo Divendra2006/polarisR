@@ -31,14 +31,6 @@ To run the polarisR Shiny app, use the following command in R:
 polarisR::run_nldr_viz()
 ```
 
-## Datasets
-
-polarisR comes with the following example datasets:
-
-- `four_clusters`
-- `pdfsense`
-- `trees`
-
 You can also upload your own dataset in CSV format.
 
 ## About the name
