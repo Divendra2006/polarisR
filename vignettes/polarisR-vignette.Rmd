@@ -195,13 +195,13 @@ The **Dynamic Tour** tab offers an interactive way to explore the high-dimension
 
 *   **Select Tour Display:** Choose from three types of dynamic tours:
     *   **Scatter:** A standard scatter plot of the projected data.
-    *   **Sage:** A density-based plot that highlights areas of high data concentration.
-    *   **Slice:** A plot that shows a slice of the high-dimensional space.
+    *   **Sage:** A scatter plot display that adjusts for the projected volume, defined in [Laa et al. (2021)](https://doi.org/10.1080/10618600.2021.1963264).
+    *   **Slice:** A scatter plot display that highlights points close to the projection plane, defined in [Laa et al. (2020)](https://doi.org/10.1080/10618600.2020.1777140).
 *   **Tour Options:**
     *   **Show Axes:** Toggle the visibility of the axes in the tour plot.
     *   **Show Wireframe:** Toggle the visibility of wireframe edges in the tour plot for enhanced structural visualization.
     *   **Point Opacity (Alpha):** Adjust the transparency of the points.
-    *   **Gamma (for Sage):** Control the smoothing parameter for the sage plot.
+    *   **Gamma (for Sage):** Control the effective dimensionality parameter for the sage plot.
     *   **Slice Relative Volume (for Slice):** Adjust the thickness of the slice.
 *   **Enable Linked Brushing:** When enabled, you can select points in the NLDR plot, and the corresponding points will be highlighted in the dynamic tour plot, and vice-versa. This is a powerful feature for exploring the relationship between the low-dimensional embedding and the original high-dimensional data.
 
