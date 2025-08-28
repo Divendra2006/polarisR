@@ -158,22 +158,6 @@
 #' @importFrom utils data read.csv
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#' # Use in a complete Shiny application
-#' shinyApp(
-#'   ui = nldr_viz_ui(),
-#'   server = nldr_viz_server
-#' )
-#' 
-#' # Test server logic (useful for development)
-#' testServer(nldr_viz_server, {
-#'   # Test reactive values and functionality
-#'   session$setInputs(example_data = "four_clusters")
-#'   expect_true(!is.null(dataset()))
-#' })
-#' }
-#'
 #' @author GSoC Contributor
 #' @keywords shiny server reactive dimensionality-reduction visualization
 nldr_viz_server <- function(input, output, session) {

@@ -119,19 +119,6 @@
 #' @importFrom plotly plotlyOutput
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#' # Create the UI object
-#' ui <- nldr_viz_ui()
-#'
-#' # Use in a complete Shiny application
-#' shinyApp(ui = nldr_viz_ui(), server = nldr_viz_server)
-#'
-#' # Integrate with custom theming
-#' ui_custom <- nldr_viz_ui()
-#' # The function returns a structure that can be further customized
-#' }
-#'
 #' @author GSoC Contributor
 #' @keywords shiny ui interface visualization dimensionality-reduction
 nldr_viz_ui <- function() {

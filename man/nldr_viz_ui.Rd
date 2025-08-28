@@ -116,20 +116,6 @@ The UI follows accessibility best practices:
 }
 }
 
-\examples{
-\dontrun{
-# Create the UI object
-ui <- nldr_viz_ui()
-
-# Use in a complete Shiny application
-shinyApp(ui = nldr_viz_ui(), server = nldr_viz_server)
-
-# Integrate with custom theming
-ui_custom <- nldr_viz_ui()
-# The function returns a structure that can be further customized
-}
-
-}
 \seealso{
 \itemize{
 \item \code{\link{nldr_viz_server}} for corresponding server logic

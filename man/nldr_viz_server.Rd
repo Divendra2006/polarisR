@@ -150,23 +150,6 @@ Comprehensive error handling includes:
 }
 }
 
-\examples{
-\dontrun{
-# Use in a complete Shiny application
-shinyApp(
-  ui = nldr_viz_ui(),
-  server = nldr_viz_server
-)
-
-# Test server logic (useful for development)
-testServer(nldr_viz_server, {
-  # Test reactive values and functionality
-  session$setInputs(example_data = "four_clusters")
-  expect_true(!is.null(dataset()))
-})
-}
-
-}
 \seealso{
 \itemize{
 \item \code{\link{nldr_viz_ui}} for the corresponding user interface
