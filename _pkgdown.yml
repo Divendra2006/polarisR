@@ -28,6 +28,8 @@ navbar:
       menu:
       - text: "Introduction to polarisR"
         href: articles/polarisR-vignette.html
+      - text: "Tips, Requirements, and Support"
+        href: articles/polarisR-vignette2.html
   right:
     - icon: fa-github fa-lg
       href: https://github.com/Divendra2006/polarisR
@@ -57,6 +59,7 @@ articles:
     navbar: ~
     contents:
     - polarisR-vignette
+    - polarisR-vignette2
 
 authors:
   Divendra Yadav:

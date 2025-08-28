@@ -3,7 +3,8 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   polarisR-vignette: polarisR-vignette.html
-last_built: 2025-08-28T14:50Z
+  polarisR-vignette2: polarisR-vignette2.html
+last_built: 2025-08-28T15:28Z
 urls:
   reference: https://divendra2006.github.io/polarisR/reference
   article: https://divendra2006.github.io/polarisR/articles

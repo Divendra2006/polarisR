@@ -18,36 +18,6 @@ Welcome to the `polarisR` vignette. This document provides a comprehensive guide
 </p>
 </div>
 
-## Installation and Setup
-
-You can install polarisR from GitHub using:
-
-```r
-# Install pak if you haven't already
-# install.packages("pak")
-
-pak::pak("Divendra2006/polarisR")
-```
-
-Alternatively, using devtools:
-
-```r
-# Install devtools if you haven't already
-# install.packages("devtools")
-
-devtools::install_github("Divendra2006/polarisR")
-```
-
-## Getting Started
-
-To launch the polarisR application:
-
-```r
-library(polarisR)
-run_nldr_viz()
-```
-
-This will open the interactive Shiny application in your default web browser.
 
 ## Application Overview
 
@@ -67,7 +37,7 @@ The **Dataset Preview** tab is the starting point of your analysis. Here, you ca
 
 <img src="../man/figures/dataset-preview.png" alt="Dataset Preview Tab" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
 
-### Features:
+**Features**:
 
 *   **Upload Dataset:** You can upload your own dataset in CSV format using the "Upload Dataset" button. The application will automatically validate the file and handle potential errors.
 *   **Example Datasets:** `polarisR` comes with three pre-loaded datasets: `four_clusters`, `pdfsense`, and `trees`. You can select any of these to explore the application's features without needing your own data.
@@ -103,13 +73,13 @@ The **Non-linear dimension reduction (NLDR)** tab is where the main NLDR analysi
 
 <img src="../man/figures/dataset-visualization.png" alt="Dataset Visualization Tab" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
 
-### Features:
+**Features**:
 
 *   **Choose Method:** Select either `t-SNE` or `UMAP` as your NLDR method.
 *   **t-SNE Parameters:**
     *   **Perplexity:** Adjust the perplexity value, which influences the number of nearest neighbors for each point.
     *   **Max Iterations:** Set the maximum number of iterations for the t-SNE algorithm.
-    *   **Auto-adjust perplexity:** Let the application automatically choose a suitable perplexity value based on your data.
+    *   **Auto-adjust perplexity:** Let the application automatically choose a suitable perplexity value based on your data. The formula used is: `perplexity = max(5, min(30, floor(n_samples / 3) - 1))`, which ensures perplexity is between 5 and 30, and scales with dataset size to maintain effective neighborhood structure.
 *   **UMAP Parameters:**
     *   **Number of Neighbors:** Control the size of the local neighborhood UMAP will use.
     *   **Min. Distance:** Set the minimum distance between embedded points.
@@ -124,7 +94,7 @@ The **Dynamic Tour** tab offers an interactive way to explore the high-dimension
 
 <img src="../man/figures/dynamic-tour.png" alt="Dynamic Tour Tab" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
 
-### Features:
+**Features**:
 
 *   **Select Tour Display:** Choose from three types of dynamic tours:
     *   **Scatter:** A standard scatter plot of the projected data.
@@ -142,7 +112,7 @@ The **Dynamic Tour** tab offers an interactive way to explore the high-dimension
 
 The **Diagnosing** tab provides tools to assess the quality of your NLDR embedding. It uses the `quollr` package to perform a quantitative analysis of the embedding and helps you find the optimal parameters for your visualization.
 
-### Features:
+**Features**:
 
 *   **Binwidth Optimization:** This feature automatically tests a range of bin widths for the `quollr` analysis and finds the optimal configuration based on the Root Mean Square Error (RMSE).
 *   **Run Quollr Analysis:** After optimizing the binwidth, you can run the full `quollr` analysis to get a detailed assessment of your embedding.
@@ -160,7 +130,7 @@ The **Diagnosing** tab provides tools to assess the quality of your NLDR embeddi
 The **2-D Layout Comparison** tab allows you to compare the results of different NLDR analyses. You can compare different methods (t-SNE vs. UMAP) or the same method with different parameters.
 
 
-### Features:
+**Features**:
 
 *   **Choose Comparison Type:**
     *   **NLDR Settings Comparison:** Compare the RMSE of different NLDR configurations. This is useful for finding the best method and parameters for your data.
@@ -172,26 +142,4 @@ The **2-D Layout Comparison** tab allows you to compare the results of different
 *   **Dataset Selection:** Select the NLDR results you want to compare from the list of stored results.
 *   **Run Comparison Plot:** Generate the comparison plot based on your selection.
 *   **Best Configuration Summary:** When comparing NLDR settings, this section will show you the best configuration found based on the RMSE.
-
-## Tips and Best Practices
-
-### Data Quality Considerations:
-*   Ensure sufficient numeric columns for analysis
-*   Handle missing values before upload
-*   Consider data scaling if variables have very different ranges
-*   Minimum 50+ observations recommended for stable NLDR results
-
-## Technical Requirements
-
-*   **R Version**: R >= 4.1.0
-*   **Key Dependencies**: shiny, plotly, DT, quollr, Rtsne, umap
-*   **Browser**: Modern web browser with JavaScript enabled
-*   **Memory**: Sufficient RAM for your dataset size (recommend 4GB+ for large datasets)
-
-## Support
-
-For questions, bug reports, or feature requests, please visit:
-
-*   **GitHub Repository**: https://github.com/Divendra2006/polarisR
-*   **Issues**: https://github.com/Divendra2006/polarisR/issues
 

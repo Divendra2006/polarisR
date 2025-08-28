@@ -1,0 +1,46 @@
+---
+title: "polarisR: Tips, Requirements, and Support"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{polarisR: Tips, Requirements, and Support}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE, 
+  message = FALSE
+)
+```
+
+This vignette provides supplementary information for using `polarisR`, including best practices, technical requirements, and support resources.
+
+```{r setup}
+library(polarisR)
+```
+
+## Tips and Best Practices
+
+**Data Quality Considerations:**
+
+*   Ensure sufficient numeric columns for analysis
+*   Handle missing values before upload
+*   Consider data scaling if variables have very different ranges
+*   Minimum 50+ observations recommended for stable NLDR results
+
+## Technical Requirements
+
+*   **R Version**: R >= 4.1.0
+*   **Key Dependencies**: shiny, plotly, DT, quollr, Rtsne, umap
+*   **Browser**: Modern web browser with JavaScript enabled
+*   **Memory**: Sufficient RAM for your dataset size (recommend 4GB+ for large datasets)
+
+## Support
+
+For questions, bug reports, or feature requests, please visit:
+
+*   **GitHub Repository**: https://github.com/Divendra2006/polarisR
+*   **Issues**: https://github.com/Divendra2006/polarisR/issues
