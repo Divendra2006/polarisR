@@ -9,7 +9,9 @@ vignette: >
 
 ## Introduction
 
-Welcome to the `polarisR` vignette. This document provides a comprehensive guide to using the `polarisR` interactive application for non-linear dimension reduction (NLDR) analysis. We will walk through each tab of the application, explaining the features and functionalities available to help you explore and understand your high-dimensional data.
+Welcome to the `polarisR`.....
+
+This document provides a comprehensive guide to use the `polarisR`. We will walk through each tab of the application, explaining the features and functionalities available to help you explore and understand your high-dimensional data.
 
 <div style="background-color: #f0f8ff; padding: 1.5em; border-radius: 8px; text-align: center; margin: 1em 0;">
 <h2 style="margin-top: 0;">What does polarisR stand for?</h2>
@@ -121,19 +123,19 @@ The **Diagnosing** tab provides tools to assess the selected NLDR layout. It use
     <img src="../man/figures/rmse-vs-binwidth.png" alt="RMSE vs Binwidth" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
     *   **Model Summary:** A table with the detailed results of the binwidth optimization.
     <img src="../man/figures/optimization-table.png" alt="Optimization Table" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
-    *   **Model Error:** A visualization that shows the quality of the model fit, highlighting areas of high and low prediction error.
+    *   **Model Error:** A visualization shows the NLDR layout, with points colored according to the high-dimensional model error.
     <img src="../man/figures/model-fit.png" alt="Model Fit" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
 *   **Configuration & Summary:** This section displays the optimal binwidth configuration and a summary of the `quollr` model fit.
 
 ## 2-D Layout Comparison Tab
 
-The **2-D Layout Comparison** tab allows you to compare the results of different NLDR analyses. You can compare different methods (t-SNE vs. UMAP) or the same method with different parameters.
+The **2-D Layout Comparison** tab allows you to compare the results of different NLDR layouts. You can compare different methods (t-SNE vs. UMAP) or the same method with different hyper-parameters.
 
 
 **Features**:
 
 *   **Choose Comparison Type:**
-    *   **NLDR Settings Comparison:** Compare the RMSE of different NLDR configurations. This is useful for finding the best method and parameters for your data.
+    *   **NLDR Settings Comparison:** Compare the RMSE of different NLDR configurations. This is useful for finding the best method and hyper-parameters for your data.
     <img src="../man/figures/method-comparison1.png" alt="NLDR Settigns Comparison" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">
     *   **Side-by-Side Visualization:** Display two NLDR plots next to each other for a direct visual comparison.
     <img src="../man/figures/method-comparison2.png" alt="Side bySide Visualization" style="width:700px; margin: 20px auto; display: block; border: 1px solid #ddd; border-radius: 5px; padding: 5px;">

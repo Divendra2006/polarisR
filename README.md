@@ -1,6 +1,6 @@
 # polarisR <img src="man/figures/logo.png" align="right" height="139" />
 
-`polarisR` is a Shiny application for visualizing high-dimensional data using non-linear dimensionality reduction (NLDR) techniques such as t-SNE and UMAP. It provides an interactive platform to explore high-dimensional datasets, diagnose NLDR layouts using the `quollr` package, and compare different NLDR layouts.
+`polarisR` is a Shiny application for diagnosing $2\text{-}D$ non-linear dimensionality reduction (NLDR) layouts generated using methods such as t-SNE and UMAP with different hyper-parameters. It also facilitates comparison of how the data appear in high dimensions through various tour methods, including scatter, sage, and slice. The application provides an interactive platform to explore high-dimensional datasets, diagnose NLDR layouts using the quollr package, and compare different NLDR results.
 
 ## Features
 
