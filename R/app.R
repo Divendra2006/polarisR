@@ -1,9 +1,9 @@
 #' Run NLDR Visualization Tool
 #'
-#' Launches the interactive NLDR (Non-Linear Dimensionality Reduction) Visualization Tool 
+#' Launches the interactive NLDR (Non-Linear Dimensionality Reduction) Visualization Tool
 #' as a Shiny application for exploring high-dimensional datasets using t-SNE and UMAP.
 #'
-#' @details 
+#' @details
 #' The application includes five main tabs:
 #' \itemize{
 #'   \item **Dataset Preview**: Upload data and preview dataset characteristics
@@ -15,7 +15,7 @@
 #'
 #' @return A Shiny application object that launches the NLDR visualization interface.
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{nldr_viz_ui}}, \code{\link{nldr_viz_server}}
 #'
 #' @import shiny

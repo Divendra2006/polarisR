@@ -1,0 +1,12 @@
+name: polarisR
+title: polarisR
+username: ebsmonash
+account: ebsmonash
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15301433
+bundleId: 10835072
+url: https://ebsmonash.shinyapps.io/polarisR/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
