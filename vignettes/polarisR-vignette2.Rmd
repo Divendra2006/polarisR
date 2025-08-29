@@ -34,6 +34,7 @@ library(polarisR)
 ## Technical Requirements
 
 *   **R Version**: R >= 4.1.0
+*   **quollr Version**: 0.3.7
 *   **Key Dependencies**: shiny, plotly, DT, quollr, Rtsne, umap
 *   **Browser**: Modern web browser with JavaScript enabled
 *   **Memory**: Sufficient RAM for your dataset size (recommend 4GB+ for large datasets)

@@ -66,6 +66,11 @@
 #'
 #' @source Simulated using \code{cardinalR} package.
 #'
+#' @references
+#' Gamage J, Cook D, Harrison P, Lydeamore M, Talagala T (2025)._cardinalR:
+#' Collection of Data Structures_. R package version 0.1.10,
+#' <https://github.com/JayaniLakshika/cardinalR>.
+#'
 #' @examples
 #' data(four_clusters)
 #' head(four_clusters)
