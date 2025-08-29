@@ -110,7 +110,7 @@ The **Dynamic Tour** tab offers an interactive way to explore the high-dimension
 
 ## Diagnosing Tab
 
-The **Diagnosing** tab provides tools to assess the quality of your NLDR embedding. It uses the `quollr` package to perform a quantitative analysis of the embedding and helps you find the optimal parameters for your visualization.
+The **Diagnosing** tab provides tools to assess the selected NLDR layout. It uses the [`quollr` package] (https://github.com/JayaniLakshika/quollr) to perform a quantitative analysis of the NLDR layout and helps you to find the optimal binwidth for the model fitting.
 
 **Features**:
 
