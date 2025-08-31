@@ -33,4 +33,9 @@ data(four_clusters)
 head(four_clusters)
 dim(four_clusters)
 }
+\references{
+Gamage J, Cook D, Harrison P, Lydeamore M, Talagala T (2025).\emph{cardinalR:
+Collection of Data Structures}. R package version 0.1.10,
+\url{https://github.com/JayaniLakshika/cardinalR}.
+}
 \keyword{datasets}

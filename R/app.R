@@ -3,6 +3,8 @@
 #' Launches the interactive NLDR (Non-Linear Dimensionality Reduction) Visualization Tool
 #' as a Shiny application for exploring high-dimensional datasets using t-SNE and UMAP.
 #'
+#' @param ... Additional arguments passed to \code{\link[shiny]{shinyApp}}
+#'
 #' @details
 #' The application includes five main tabs:
 #' \itemize{

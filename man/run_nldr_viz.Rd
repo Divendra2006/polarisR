@@ -6,6 +6,9 @@
 \usage{
 run_nldr_viz(...)
 }
+\arguments{
+\item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}}
+}
 \value{
 A Shiny application object that launches the NLDR visualization interface.
 }
