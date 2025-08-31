@@ -150,7 +150,7 @@
 #' @importFrom future future resolved value plan multisession multicore sequential supportsMulticore
 #' @importFrom ggplot2 ggplot aes geom_point labs coord_fixed theme_minimal geom_line scale_color_manual guide_legend
 #' @importFrom DT renderDT datatable DTOutput
-#' @importFrom detourr detour tour_aes tour_path show_scatter show_sage show_slice shinyRenderDisplayScatter2d displayScatter2dOutput
+#' @importFrom detourr detour tour_aes tour_path show_scatter show_sage show_slice shinyRenderDetour detourOutput
 #' @importFrom tourr grand_tour
 #' @importFrom quollr gen_scaled_data hex_binning extract_hexbin_centroids tri_bin_centroids gen_edges avg_highd_data gen_diffbin1_errors predict_emb comb_data_model show_langevitour glance
 #' @importFrom dplyr filter group_by slice_min ungroup arrange left_join mutate bind_rows
@@ -621,7 +621,7 @@ nldr_viz_server <- function(input, output, session) {
 
   output$dynamic_tour_output_ui <- shiny::renderUI({
     shiny::req(shared_vis_data(), input$tour_display_type)
-    detourr::displayScatter2dOutput("tour_plot_2d", height = "580px")
+    detourr::detourOutput("tour_plot_2d", height = "580px")
   })
 
   
@@ -672,20 +672,20 @@ nldr_viz_server <- function(input, output, session) {
     switch(input$tour_display_type,
       "Scatter" = {
         shiny::req(input$tour_alpha)
-        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data)
+        detour_obj |> detourr::show_scatter(alpha = input$tour_alpha, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data, edge_colour = "gray", edge_width = 0.5)
       },
       "Sage" = {
         shiny::req(input$tour_gamma)
-        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data)
+        detour_obj |> detourr::show_sage(gamma = input$tour_gamma, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data, edge_colour = "gray", edge_width = 0.5)
       },
       "Slice" = {
         shiny::req(input$tour_slice_volume)
-        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data)
+        detour_obj |> detourr::show_slice(slice_relative_volume = input$tour_slice_volume, axes = input$tour_axes, palette = pal, size = 1, edges = edges_data, edge_colour = "gray", edge_width = 0.5)
       }
     )
   })
 
-  output$tour_plot_2d <- detourr::shinyRenderDisplayScatter2d({
+  output$tour_plot_2d <- detourr::shinyRenderDetour({
     tour_object()
   })
 
