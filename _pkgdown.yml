@@ -52,7 +52,6 @@ reference:
     contents:
     - four_clusters
     - pdfsense
-    - fake_trees
 
 articles:
   - title: "Getting Started"

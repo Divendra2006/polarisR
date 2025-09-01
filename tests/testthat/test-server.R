@@ -555,7 +555,6 @@ test_that("dataset selection and filtering logic works correctly", {
   datasets <- load_custom_datasets()
   expect_true("four_clusters" %in% names(datasets))
   expect_true("pdfsense" %in% names(datasets))
-  expect_true("trees" %in% names(datasets))
   four_clusters <- datasets$four_clusters
   numeric_cols <- sapply(four_clusters, is.numeric)
   numeric_data <- four_clusters[, numeric_cols, drop = FALSE]

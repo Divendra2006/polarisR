@@ -10,7 +10,7 @@
 #' **Data Management:**
 #' \itemize{
 #'   \item File upload validation and CSV parsing with error handling
-#'   \item Built-in dataset loading (four_clusters, pdfsense, fake_trees)
+#'   \item Built-in dataset loading (four_clusters, pdfsense)
 #'   \item Empty cell detection and data quality validation
 #'   \item Column selection and filtering capabilities
 #'   \item Dynamic dataset storage and retrieval system
@@ -180,7 +180,7 @@ nldr_viz_server <- function(input, output, session) {
   vis_results <- shiny::reactiveVal(NULL)
   apply_changes_clicked <- shiny::reactiveVal(FALSE)
   custom_datasets <- shiny::reactiveVal(load_custom_datasets())
-  available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense", "trees"))
+  available_datasets <- shiny::reactiveVal(c("None", "four_clusters", "pdfsense"))
 
   quollr_model <- shiny::reactiveVal(NULL)
   quollr_results <- shiny::reactiveVal(NULL)

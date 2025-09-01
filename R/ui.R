@@ -10,7 +10,7 @@
 #' **1. Dataset Preview Tab:**
 #' \itemize{
 #'   \item File upload widget for CSV datasets with validation
-#'   \item Selection of built-in example datasets (four_clusters, pdfsense, fake_trees)
+#'   \item Selection of built-in example datasets (four_clusters, pdfsense)
 #'   \item Interactive column selection with auto-selection option
 #'   \item Data preview table with scrolling and pagination
 #'   \item Dataset summary statistics (rows, columns, data types)
@@ -160,7 +160,7 @@ nldr_viz_ui <- function() {
             title = "Data Options",
             shiny::fileInput("file", "Upload Dataset", accept = c(".csv")),
             shiny::selectInput("example_data", "Example Datasets",
-              choices = c("None", "four_clusters", "pdfsense", "trees")
+              choices = c("None", "four_clusters", "pdfsense")
             )
           ),
           bslib::card(

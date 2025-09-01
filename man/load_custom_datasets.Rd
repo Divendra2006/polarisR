@@ -12,7 +12,6 @@ is a data.frame with the following structure:
 \itemize{
 \item \code{$four_clusters}: data.frame with cluster analysis data
 \item \code{$pdfsense}: data.frame with high-dimensional physics data
-\item \code{$trees}: data.frame with tree-structured synthetic data
 }
 
 If any dataset fails to load, a warning is issued but the function continues,
@@ -72,7 +71,6 @@ available_datasets <- shiny::reactiveVal(
 \itemize{
 \item \code{\link{four_clusters}} for four_clusters dataset documentation
 \item \code{\link{pdfsense}} for pdfsense dataset documentation
-\item \code{\link{fake_trees}} for fake_trees dataset documentation
 \item \code{\link[utils]{data}} for dataset loading mechanism
 }
 }

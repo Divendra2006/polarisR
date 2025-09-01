@@ -1,7 +1,6 @@
 test_that("package datasets are accessible", {
   expect_no_error(data("four_clusters", package = "polarisR"))
   expect_no_error(data("pdfsense", package = "polarisR"))
-  expect_no_error(data("fake_trees", package = "polarisR"))
   
   data("four_clusters", package = "polarisR")
   expect_true(exists("four_clusters"))
@@ -10,31 +9,23 @@ test_that("package datasets are accessible", {
   data("pdfsense", package = "polarisR")
   expect_true(exists("pdfsense"))
   expect_s3_class(pdfsense, "data.frame")
-  
-  data("fake_trees", package = "polarisR")
-  expect_true(exists("fake_trees"))
-  expect_s3_class(fake_trees, "data.frame")
 })
 
 test_that("dataset characteristics are appropriate for NLDR", {
   data("four_clusters", package = "polarisR")
   data("pdfsense", package = "polarisR")
-  data("fake_trees", package = "polarisR")
   
   expect_true("cluster" %in% names(four_clusters))
   expect_gt(length(unique(four_clusters$cluster)), 1)
   
   numeric_cols_fc <- sum(sapply(four_clusters, is.numeric))
   numeric_cols_pdf <- sum(sapply(pdfsense, is.numeric))
-  numeric_cols_trees <- sum(sapply(fake_trees, is.numeric))
   
   expect_gte(numeric_cols_fc, 2)
   expect_gte(numeric_cols_pdf, 2)
-  expect_gte(numeric_cols_trees, 2)
   
   expect_gte(nrow(four_clusters), 10)
   expect_gte(nrow(pdfsense), 10)
-  expect_gte(nrow(fake_trees), 10)
   
   expect_false(any(is.na(four_clusters$x1)))
   expect_false(any(is.na(four_clusters$x2)))
@@ -61,7 +52,6 @@ test_that("load_custom_datasets integrates with package data", {
   
   expect_true("four_clusters" %in% names(custom_datasets))
   expect_true("pdfsense" %in% names(custom_datasets))
-  expect_true("trees" %in% names(custom_datasets))
   
   data("four_clusters", package = "polarisR")
   expect_equal(nrow(custom_datasets$four_clusters), nrow(four_clusters))
@@ -88,7 +78,6 @@ test_that("UI components integrate with data loading", {
   
   expect_true(grepl("four_clusters", ui_html))
   expect_true(grepl("pdfsense", ui_html))
-  expect_true(grepl("trees", ui_html))
 })
 
 test_that("error handling works for invalid data", {

@@ -22,7 +22,7 @@ The user interface is organized into five main navigation panels:
 \strong{1. Dataset Preview Tab:}
 \itemize{
 \item File upload widget for CSV datasets with validation
-\item Selection of built-in example datasets (four_clusters, pdfsense, fake_trees)
+\item Selection of built-in example datasets (four_clusters, pdfsense)
 \item Interactive column selection with auto-selection option
 \item Data preview table with scrolling and pagination
 \item Dataset summary statistics (rows, columns, data types)

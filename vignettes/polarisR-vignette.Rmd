@@ -42,25 +42,22 @@ The **Dataset Preview** tab is the starting point of your analysis. Here, you ca
 **Features**:
 
 *   **Upload Dataset:** You can upload your own dataset in CSV format using the "Upload Dataset" button. The application will automatically validate the file and handle potential errors.
-*   **Example Datasets:** `polarisR` comes with three pre-loaded datasets: `four_clusters`, `pdfsense`, and `trees`. You can select any of these to explore the application's features without needing your own data.
+*   **Example Datasets:** `polarisR` comes with two pre-loaded datasets: `four_clusters` and `pdfsense`. You can select any of these to explore the application's features without needing your own data.
 
 ```r
 # Access the datasets directly
 data(four_clusters, package = "polarisR")
 data(pdfsense, package = "polarisR") 
-data(fake_trees, package = "polarisR")
 
 # View dataset information
 ?four_clusters
 ?pdfsense
-?fake_trees
 ```
 
 **Dataset Descriptions:**
 
 *   **four_clusters**: A synthetic dataset with four distinct clusters, perfect for testing clustering visualization
 *   **pdfsense**: A high-energy physics dataset representing parton distribution function fits
-*   **fake_trees**: A high-dimensional tree data structure with 10 branching points
 
 **Additional Features:**
 

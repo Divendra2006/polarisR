@@ -32,7 +32,7 @@ The server function manages several key areas of functionality:
 \strong{Data Management:}
 \itemize{
 \item File upload validation and CSV parsing with error handling
-\item Built-in dataset loading (four_clusters, pdfsense, fake_trees)
+\item Built-in dataset loading (four_clusters, pdfsense)
 \item Empty cell detection and data quality validation
 \item Column selection and filtering capabilities
 \item Dynamic dataset storage and retrieval system

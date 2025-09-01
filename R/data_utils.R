@@ -10,7 +10,6 @@
 #'   \itemize{
 #'     \item \code{$four_clusters}: data.frame with cluster analysis data
 #'     \item \code{$pdfsense}: data.frame with high-dimensional physics data
-#'     \item \code{$trees}: data.frame with tree-structured synthetic data
 #'   }
 #'
 #'   If any dataset fails to load, a warning is issued but the function continues,
@@ -40,7 +39,6 @@
 #' \itemize{
 #'   \item \code{\link{four_clusters}} for four_clusters dataset documentation
 #'   \item \code{\link{pdfsense}} for pdfsense dataset documentation
-#'   \item \code{\link{fake_trees}} for fake_trees dataset documentation
 #'   \item \code{\link[utils]{data}} for dataset loading mechanism
 #' }
 #'
@@ -88,16 +86,6 @@ load_custom_datasets <- function() {
     }
   }, error = function(e) {
     warning("Could not load pdfsense data: ", e$message)
-  })
-
-  # Load fake_trees dataset as "trees"
-  tryCatch({
-    data("fake_trees", package = "polarisR", envir = environment())
-    if(exists("fake_trees", envir = environment())) {
-      datasets[["trees"]] <- get("fake_trees", envir = environment())
-    }
-  }, error = function(e) {
-    warning("Could not load fake_trees data: ", e$message)
   })
 
   return(datasets)
