@@ -1,6 +1,6 @@
 Package: polarisR
 Title: Non-Linear Dimensionality Reduction Visualization Tool
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(
     person("Divendra", "Yadav", , "divendrasinghyadaviit@gmail.com", role = c("aut", "cre")),
     person("Ursula", "Laa", , "ursula.laa@boku.ac.at", role = "aut",
