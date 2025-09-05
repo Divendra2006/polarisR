@@ -10,7 +10,7 @@ Authors@R: c(
     person("Eun-Kyung", "Lee", , "lee.eunk@gmail.com", role = "aut")
   )
 Description: A 'shiny' application for visualizing high-dimensional data
-    using non-linear dimensionality reduction (NLDR) techniques such as
+    using non-linear dimensionality reduction ('NLDR') techniques such as
     't-SNE' and 'UMAP'. It provides an interactive platform to explore
     high-dimensional datasets, diagnose the quality of the embeddings
     using the 'quollr' package, and compare different NLDR methods.
