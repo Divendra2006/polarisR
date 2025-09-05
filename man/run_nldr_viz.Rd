@@ -10,11 +10,11 @@ run_nldr_viz(...)
 \item{...}{Additional arguments passed to \code{\link[shiny]{shinyApp}}}
 }
 \value{
-A Shiny application object that launches the NLDR visualization interface.
+A shiny application object that launches the NLDR visualization interface.
 }
 \description{
 Launches the interactive NLDR (Non-Linear Dimensionality Reduction) Visualization Tool
-as a Shiny application for exploring high-dimensional datasets using t-SNE and UMAP.
+as a shiny application for exploring high-dimensional datasets using t-SNE and UMAP.
 }
 \details{
 The application includes five main tabs:

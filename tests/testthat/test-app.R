@@ -1,6 +1,6 @@
 library(polarisR)
 
-test_that("run_nldr_viz creates a Shiny app", {
+test_that("run_nldr_viz creates a shiny app", {
   expect_true(exists("run_nldr_viz"))
   expect_true(is.function(run_nldr_viz))
   

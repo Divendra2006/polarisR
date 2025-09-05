@@ -9,11 +9,11 @@ Authors@R: c(
            comment = c(ORCID = "0000-0002-6265-6481")),
     person("Eun-Kyung", "Lee", , "lee.eunk@gmail.com", role = "aut")
   )
-Description: A Shiny application for visualizing high-dimensional data
+Description: A 'shiny' application for visualizing high-dimensional data
     using non-linear dimensionality reduction (NLDR) techniques such as
-    t-SNE and UMAP. It provides an interactive platform to explore
+    't-SNE' and 'UMAP'. It provides an interactive platform to explore
     high-dimensional datasets, diagnose the quality of the embeddings
-    using the quollr package, and compare different NLDR methods.
+    using the 'quollr' package, and compare different NLDR methods.
 License: MIT + file LICENSE
 URL: https://github.com/Divendra2006/polarisR,
     https://divendra2006.github.io/polarisR/

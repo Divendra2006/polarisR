@@ -45,7 +45,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' if(interactive()){
 #' # Load all available datasets
 #' datasets <- load_custom_datasets()
 #' names(datasets)  # Shows available dataset names
@@ -56,7 +56,7 @@
 #'   head(datasets$four_clusters)
 #' }
 #'
-#' # Use in Shiny application initialization
+#' # Use in shiny application initialization
 #' custom_datasets <- shiny::reactiveVal(load_custom_datasets())
 #' available_datasets <- shiny::reactiveVal(
 #'   c("None", names(load_custom_datasets()))

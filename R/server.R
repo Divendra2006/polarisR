@@ -77,16 +77,16 @@
 #'   \item Future-based asynchronous computation for UI responsiveness
 #' }
 #'
-#' @param input The Shiny input object containing all user interface inputs.
+#' @param input The shiny input object containing all user interface inputs.
 #'   This includes form controls, button clicks, plot selections, and file uploads.
-#' @param output The Shiny output object for sending rendered content to the UI.
+#' @param output The shiny output object for sending rendered content to the UI.
 #'   Used for plots, tables, text outputs, and dynamic UI elements.
-#' @param session The Shiny session object for managing client-server communication.
+#' @param session The shiny session object for managing client-server communication.
 #'   Provides access to session state, input updates, and client information.
 #'
 #' @return Invisible NULL. The function sets up reactive expressions and observers
 #'   that handle all server-side logic. The actual outputs are managed through
-#'   the Shiny reactive system and sent to the client via the output object.
+#'   the shiny reactive system and sent to the client via the output object.
 #'
 #' @section Reactive Values:
 #' The server maintains several key reactive values:
@@ -138,7 +138,7 @@
 #'   \item \code{\link{nldr_viz_ui}} for the corresponding user interface
 #'   \item \code{\link{run_nldr_viz}} for launching the complete application
 #'   \item \code{\link{load_custom_datasets}} for data loading utilities
-#'   \item \code{\link[shiny]{shinyServer}} for Shiny server function details
+#'   \item \code{\link[shiny]{shinyServer}} for shiny server function details
 #'   \item \code{\link[future]{plan}} for parallel processing configuration
 #' }
 #'

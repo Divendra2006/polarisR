@@ -7,19 +7,19 @@
 nldr_viz_server(input, output, session)
 }
 \arguments{
-\item{input}{The Shiny input object containing all user interface inputs.
+\item{input}{The shiny input object containing all user interface inputs.
 This includes form controls, button clicks, plot selections, and file uploads.}
 
-\item{output}{The Shiny output object for sending rendered content to the UI.
+\item{output}{The shiny output object for sending rendered content to the UI.
 Used for plots, tables, text outputs, and dynamic UI elements.}
 
-\item{session}{The Shiny session object for managing client-server communication.
+\item{session}{The shiny session object for managing client-server communication.
 Provides access to session state, input updates, and client information.}
 }
 \value{
 Invisible NULL. The function sets up reactive expressions and observers
 that handle all server-side logic. The actual outputs are managed through
-the Shiny reactive system and sent to the client via the output object.
+the shiny reactive system and sent to the client via the output object.
 }
 \description{
 Implements the comprehensive server-side logic for the NLDR visualization tool.
@@ -155,7 +155,7 @@ Comprehensive error handling includes:
 \item \code{\link{nldr_viz_ui}} for the corresponding user interface
 \item \code{\link{run_nldr_viz}} for launching the complete application
 \item \code{\link{load_custom_datasets}} for data loading utilities
-\item \code{\link[shiny]{shinyServer}} for Shiny server function details
+\item \code{\link[shiny]{shinyServer}} for shiny server function details
 \item \code{\link[future]{plan}} for parallel processing configuration
 }
 }

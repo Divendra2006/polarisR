@@ -56,17 +56,17 @@ generation, and user interactions for the multi-tab NLDR analysis application.</
 
 
 <dl><dt id="arg-input">input<a class="anchor" aria-label="anchor" href="#arg-input"></a></dt>
-<dd><p>The Shiny input object containing all user interface inputs.
+<dd><p>The shiny input object containing all user interface inputs.
 This includes form controls, button clicks, plot selections, and file uploads.</p></dd>
 
 
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
-<dd><p>The Shiny output object for sending rendered content to the UI.
+<dd><p>The shiny output object for sending rendered content to the UI.
 Used for plots, tables, text outputs, and dynamic UI elements.</p></dd>
 
 
 <dt id="arg-session">session<a class="anchor" aria-label="anchor" href="#arg-session"></a></dt>
-<dd><p>The Shiny session object for managing client-server communication.
+<dd><p>The shiny session object for managing client-server communication.
 Provides access to session state, input updates, and client information.</p></dd>
 
 </dl></div>
@@ -74,7 +74,7 @@ Provides access to session state, input updates, and client information.</p></dd
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisible NULL. The function sets up reactive expressions and observers
 that handle all server-side logic. The actual outputs are managed through
-the Shiny reactive system and sent to the client via the output object.</p>
+the shiny reactive system and sent to the client via the output object.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -168,7 +168,7 @@ The server automatically configures parallel processing:</p><ul><li><p>Uses mult
 <ul><li><p><code><a href="nldr_viz_ui.html">nldr_viz_ui</a></code> for the corresponding user interface</p></li>
 <li><p><code><a href="run_nldr_viz.html">run_nldr_viz</a></code> for launching the complete application</p></li>
 <li><p><code><a href="load_custom_datasets.html">load_custom_datasets</a></code> for data loading utilities</p></li>
-<li><p><code><a href="https://rdrr.io/pkg/shiny/man/shinyServer.html" class="external-link">shinyServer</a></code> for Shiny server function details</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/shiny/man/shinyServer.html" class="external-link">shinyServer</a></code> for shiny server function details</p></li>
 <li><p><code><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></code> for parallel processing configuration</p></li>
 </ul></div>
     </div>
