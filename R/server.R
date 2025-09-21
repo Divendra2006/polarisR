@@ -152,7 +152,7 @@
 #' @importFrom DT renderDT datatable DTOutput
 #' @importFrom detourr detour tour_aes tour_path show_scatter show_sage show_slice shinyRenderDetour detourOutput
 #' @importFrom tourr grand_tour
-#' @importFrom quollr gen_scaled_data hex_binning extract_hexbin_centroids tri_bin_centroids gen_edges avg_highd_data gen_diffbin1_errors predict_emb comb_data_model show_langevitour glance
+#' @importFrom quollr gen_scaled_data hex_binning merge_hexbin_centroids tri_bin_centroids gen_edges avg_highd_data gen_diffbin1_errors predict_emb comb_data_model show_langevitour glance
 #' @importFrom dplyr filter group_by slice_min ungroup arrange left_join mutate bind_rows
 #' @importFrom stats quantile setNames var
 #' @importFrom utils data read.csv
@@ -796,12 +796,12 @@ nldr_viz_server <- function(input, output, session) {
 
           shiny::incProgress(0.2, detail = "Scaling and binning...")
           nldr_obj <- quollr::gen_scaled_data(nldr_data = nldr_data_raw)
-          hb_obj <- quollr::hex_binning(nldr_obj = nldr_obj, b1 = optimal$b1)
+          hb_obj <- quollr::hex_binning(nldr_scaled_obj = nldr_obj, b1 = optimal$b1)
 
           all_centroids_df <- hb_obj$centroids
           counts_df <- hb_obj$std_cts
 
-          df_bin_centroids <- quollr::extract_hexbin_centroids(
+          df_bin_centroids <- quollr::merge_hexbin_centroids(
             centroids_data = all_centroids_df,
             counts_data = counts_df
           )
