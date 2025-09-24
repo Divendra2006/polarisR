@@ -95,4 +95,3 @@ test_that("package namespace is properly configured", {
   expect_true("nldr_viz_server" %in% exported_functions)
   expect_true("load_custom_datasets" %in% exported_functions)
 })
-
