@@ -147,7 +147,8 @@
 #' @importFrom crosstalk SharedData
 #' @importFrom plotly highlight renderPlotly plotlyOutput ggplotly layout config plot_ly add_text
 #' @importFrom FNN get.knn
-#' @importFrom future future resolved value plan multisession multicore sequential supportsMulticore
+#' @importFrom future future resolved value plan multisession multicore sequential
+#' @importFrom parallelly supportsMulticore
 #' @importFrom ggplot2 ggplot aes geom_point labs coord_fixed theme_minimal geom_line scale_color_manual guide_legend
 #' @importFrom DT renderDT datatable DTOutput
 #' @importFrom detourr detour tour_aes tour_path show_scatter show_sage show_slice shinyRenderDetour detourOutput
@@ -166,7 +167,7 @@ nldr_viz_server <- function(input, output, session) {
   emb1 <- pred_emb_1 <- emb2 <- pred_emb_2 <- Residual <- NULL
   Error_Level <- tooltip_text <- NULL
   
-  if (!future::supportsMulticore()) {
+  if (!parallelly::supportsMulticore()) {
     future::plan(future::multisession, workers = 2)
   } else {
     future::plan(future::multicore, workers = 2)
